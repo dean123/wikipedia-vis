@@ -22,8 +22,8 @@
 					<Add directory="/opt/glfw3/current/include" />
 					<Add directory="/opt/boost/latest/include" />
 					<Add directory="../../ext" />
-					<Add directory="../../../../../../wikiutil/wikidb/contrib/include/fastdb" />
-					<Add directory="../../../../../../wikiutil/wikidb/include" />
+					<Add directory="../../../../wikiutil/wikidb/contrib/include/fastdb" />
+					<Add directory="../../../../wikiutil/wikidb/include" />
 				</Compiler>
 				<Linker>
 					<Add library="vta_db" />
@@ -55,8 +55,8 @@
 					<Add directory="../../build/bin" />
 					<Add directory="/opt/glfw3/current/lib" />
 					<Add directory="/opt/boost/latest/lib" />
-					<Add directory="../../../../../../wikiutil/wikidb/contrib/lib" />
-					<Add directory="../../../../../../wikiutil/wikidb/build" />
+					<Add directory="../../../../wikiutil/wikidb/contrib/lib" />
+					<Add directory="../../../../wikiutil/wikidb/build" />
 				</Linker>
 			</Target>
 			<Target title="Release">

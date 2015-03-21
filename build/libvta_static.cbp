@@ -15,12 +15,12 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DHAVE_CONFIG_H" />
-					<Add directory="../../../../../wikiutil/wikidb/include" />
+					<Add directory="../../../wikiutil/wikidb/include" />
 					<Add directory="../src" />
 					<Add directory="../ext/gloost/src" />
 					<Add directory="/usr/include/freetype2" />
 					<Add directory="/opt/boost/latest/include" />
-					<Add directory="../../../../../wikiutil/wikidb/contrib/include/fastdb" />
+					<Add directory="../../../wikiutil/wikidb/contrib/include/fastdb" />
 				</Compiler>
 				<Linker>
 					<Add library="gloost_db" />
@@ -41,8 +41,8 @@
 					<Add library="m" />
 					<Add library="pthread" />
 					<Add directory="../ext/gloost/gnulinux/bin" />
-					<Add directory="../../../../../wikiutil/wikidb/contrib/lib" />
-					<Add directory="../../../../../wikiutil/wikidb/build" />
+					<Add directory="../../../wikiutil/wikidb/contrib/lib" />
+					<Add directory="../../../wikiutil/wikidb/build" />
 				</Linker>
 			</Target>
 			<Target title="Release">
