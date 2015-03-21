@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Workspace">
+		<Project filename="glfw_demo.cbp">
+			<Depends filename="../../build/libvta_static.cbp" />
+			<Depends filename="../../ext/gloost/build/library_build_with_codeblocks/libgloost.cbp" />
+		</Project>
+		<Project filename="../../build/libvta_static.cbp" />
+		<Project filename="../../ext/gloost/build/library_build_with_codeblocks/libgloost.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

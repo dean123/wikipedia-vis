@@ -1,0 +1,23 @@
+#version 330
+
+///////////////////////////////////////////////////////////////////
+
+
+in fData
+{
+    vec4 color;
+}frag;
+
+
+// output
+layout ( location = 0 ) out vec4 FragColor;
+
+
+///////////////////////////////////////////////////////////////////
+
+
+void main()
+{
+  FragColor = frag.color;
+//  FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}

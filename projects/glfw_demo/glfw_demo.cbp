@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="glfw_demo" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/glfw_demo" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DHAVE_CONFIG_H" />
+					<Add directory="../../ext/gloost/src" />
+					<Add directory="../../src" />
+					<Add directory="src" />
+					<Add directory="/usr/include/freetype2" />
+					<Add directory="/usr/lib/x86_64-linux-gnu" />
+					<Add directory="/opt/glfw3/current/include" />
+					<Add directory="/opt/boost/latest/include" />
+					<Add directory="../../ext" />
+					<Add directory="../../../../../../wikiutil/wikidb/contrib/include/fastdb" />
+					<Add directory="../../../../../../wikiutil/wikidb/include" />
+				</Compiler>
+				<Linker>
+					<Add library="vta_db" />
+					<Add library="wikidb" />
+					<Add library="fastdb" />
+					<Add library="boost_system" />
+					<Add library="boost_filesystem" />
+					<Add library="m" />
+					<Add library="gloost_db" />
+					<Add library="pthread" />
+					<Add library="GLEW" />
+					<Add library="glfw3" />
+					<Add library="GLU" />
+					<Add library="GL" />
+					<Add library="X11" />
+					<Add library="Xxf86vm" />
+					<Add library="Xrandr" />
+					<Add library="Xi" />
+					<Add library="freeimage" />
+					<Add library="freetype" />
+					<Add library="boost_thread" />
+					<Add library="boost_timer" />
+					<Add library="boost_regex" />
+					<Add library="boost_serialization" />
+					<Add library="Xinerama" />
+					<Add library="Xcursor" />
+					<Add directory="../../ext/gloost/build/lib" />
+					<Add directory="../../ext/gloost/contrib/lib" />
+					<Add directory="../../build/bin" />
+					<Add directory="/opt/glfw3/current/lib" />
+					<Add directory="/opt/boost/latest/lib" />
+					<Add directory="../../../../../../wikiutil/wikidb/contrib/lib" />
+					<Add directory="../../../../../../wikiutil/wikidb/build" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/glfw_demo" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="vta" />
+					<Add library="gloost" />
+					<Add library="GLEW" />
+					<Add library="glfw3" />
+					<Add library="GLU" />
+					<Add library="GL" />
+					<Add library="X11" />
+					<Add library="Xxf86vm" />
+					<Add library="Xrandr" />
+					<Add library="pthread" />
+					<Add library="Xi" />
+					<Add library="freeimage" />
+					<Add library="freetype" />
+					<Add library="boost_thread" />
+					<Add library="boost_timer" />
+					<Add library="boost_system" />
+					<Add library="boost_filesystem" />
+					<Add library="boost_regex" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-std=c++0x" />
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add option="-DHAVE_CONFIG_H" />
+			<Add option="-DGLOOST_GNULINUX" />
+		</Compiler>
+		<Unit filename="../../ext/imgui/imgui.cpp" />
+		<Unit filename="../../ext/imgui/imgui.h" />
+		<Unit filename="../../ext/imgui/imgui_impl_glfw.cpp" />
+		<Unit filename="../../ext/imgui/imgui_impl_glfw.h" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<lib_finder disable_auto="1" />
+			<debugger />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -5,3 +5,9 @@ obj/
 # codeblocks settings
 *.depend
 *.layout
+
+# external dependencies
+ext/gloost
+projects/glfw_demo/bin
+projects/glfw_demo/obj
+
