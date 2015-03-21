@@ -1,0 +1,7 @@
+# directories
+bin/
+obj/
+
+# codeblocks settings
+*.depend
+*.layout
