@@ -42,7 +42,7 @@ void main_window_display()
   overview_renderer->display();
 }
 
-void cluster_window_display()
+void detail_window_display()
 {
   detail_renderer->display();
 }
@@ -62,7 +62,7 @@ void main_window_resizefun(GLFWwindow* window, int width, int height)
   overview_renderer->resize(width, height);
 }
 
-void cluster_window_resizefun(GLFWwindow* window, int width, int height)
+void detail_window_resizefun(GLFWwindow* window, int width, int height)
 {
   detail_renderer->resize(width, height);
 }
@@ -93,6 +93,20 @@ void main_window_mousebuttonfun(GLFWwindow* window, int button, int action, int 
     overview_renderer->mouseRelease(xpos, ypos, button, mods);
 }
 
+void detail_window_mousebuttonfun(GLFWwindow* window, int button, int action, int mods)
+{
+  double xpos = 0;
+  double ypos = 0;
+
+  // retrieve latest cursor position
+  glfwGetCursorPos(window, &xpos, &ypos);
+
+  if (action)
+    detail_renderer->mousePress(xpos, ypos, button, mods);
+  else
+    detail_renderer->mouseRelease(xpos, ypos, button, mods);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -111,6 +125,14 @@ void main_window_scrollfun(GLFWwindow* window, double xoffset, double yoffset)
     overview_renderer->mouseScrollDecrease();
 }
 
+void detail_window_scrollfun(GLFWwindow* window, double xoffset, double yoffset)
+{
+  if (yoffset > 0)
+    detail_renderer->mouseScrollEnhance();
+  else
+    detail_renderer->mouseScrollDecrease();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -125,6 +147,11 @@ void main_window_scrollfun(GLFWwindow* window, double xoffset, double yoffset)
 void main_window_cursorposfun(GLFWwindow* window, double xpos, double ypos)
 {
   overview_renderer->mouseMove(xpos, ypos);
+}
+
+void detail_window_cursorposfun(GLFWwindow* window, double xpos, double ypos)
+{
+  detail_renderer->mouseMove(xpos, ypos);
 }
 
 
@@ -192,7 +219,7 @@ int main(int argc, char *argv[])
   if (!glfwInit())
       exit(1);
 
-  // new cluster visualization instance
+  // new detail visualization instance
   detail_renderer = new vta::DetailRenderer(graph);
 
   if (!detail_renderer->initialize())
@@ -202,24 +229,27 @@ int main(int argc, char *argv[])
   }
 
 
-  // GLFW cluster window init
-  GLFWwindow* cluster_window = glfwCreateWindow(1920, 1080, "Cluster Window", NULL, NULL);
+  // GLFW detail window init
+  GLFWwindow* detail_window = glfwCreateWindow(1920, 1080, "Detail Window", NULL, NULL);
 
-  if (!cluster_window)
+  if (!detail_window)
   {
     glfwTerminate();
     exit(EXIT_FAILURE);
   }
 
-  glfwMakeContextCurrent(cluster_window);
-  glfwSetFramebufferSizeCallback(cluster_window, cluster_window_resizefun);
+  glfwMakeContextCurrent(detail_window);
+  glfwSetCursorPosCallback(detail_window, detail_window_cursorposfun);
+  glfwSetMouseButtonCallback(detail_window, detail_window_mousebuttonfun);
+  glfwSetFramebufferSizeCallback(detail_window, detail_window_resizefun);
+  glfwSetScrollCallback(detail_window, detail_window_scrollfun);
 
-  int cluster_window_width = 0;
-  int cluster_window_height = 0;
+  int detail_window_width = 0;
+  int detail_window_height = 0;
 
-  glfwGetFramebufferSize(cluster_window, &cluster_window_width, &cluster_window_height);
+  glfwGetFramebufferSize(detail_window, &detail_window_width, &detail_window_height);
 
-  detail_renderer->resize(cluster_window_width, cluster_window_height); // initial resize
+  detail_renderer->resize(detail_window_width, detail_window_height); // initial resize
 
   // GLFW main window init
   GLFWwindow* main_window = glfwCreateWindow(1920, 1080, "VisualTextAnalytics", NULL, NULL);
@@ -277,8 +307,6 @@ int main(int argc, char *argv[])
   // Blacklist
   char* buf = new char [256];
 
-  // Set Cluster Visualization in main vis
-
   // Main loop
   while (!glfwWindowShouldClose(imgui_window))
   {
@@ -289,10 +317,10 @@ int main(int argc, char *argv[])
     main_window_display(); // display function
     glfwSwapBuffers(main_window);
 
-    // Cluster Window (/Visualization)
-    glfwMakeContextCurrent(cluster_window);
-    cluster_window_display(); // display function
-    glfwSwapBuffers(cluster_window);
+    // detail Window (/Visualization)
+    glfwMakeContextCurrent(detail_window);
+    detail_window_display(); // display function
+    glfwSwapBuffers(detail_window);
 
     // Imgui Window (Interface)
     glfwMakeContextCurrent(imgui_window);

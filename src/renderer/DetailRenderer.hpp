@@ -55,12 +55,22 @@ namespace vta
       // resize
       void resize(int width, int height);
 
+      // mouse input
+      void mousePress(int x, int y, int btn, int mods);
+      void mouseRelease(int x, int y, int btn, int mods);
+      void mouseMove(int x, int y);
+      void mouseScrollEnhance();
+      void mouseScrollDecrease();
+
 
     protected:
 
       // size
       int _width;
       int _height;
+
+      // holding the current mouse state
+      gloost::human_input::MouseState _mouseState;
 
       // Model View Projection
       gloost::Matrix _projectionMatrix;

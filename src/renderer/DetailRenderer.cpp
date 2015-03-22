@@ -37,6 +37,8 @@ DetailRenderer::DetailRenderer(Visualization* graph):
   _width(0),
   _height(0),
 
+  _mouseState(),
+
   _projectionMatrix(),
   _viewMatrix(),
   _modelMatrixStack(),
@@ -361,6 +363,98 @@ DetailRenderer::resize(int width, int height)
                           0.1, 10.0);
 
   _uniformSet.set_mat4("Projection", gloost::mat4(_projectionMatrix));
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Mouse input
+  \param   x     The x-position
+  \param   y     The y-position
+  \param   btn   The pressed button
+  \param   mods  The modification key
+  \remarks ...
+*/
+
+void
+DetailRenderer::mousePress(int x, int y, int btn, int mods)
+{
+  _mouseState.setButtonState(btn + 1, true);
+  _mouseState.setPosition((float)x, (float)(_height - y));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Mouse input
+  \param   x     The x-position
+  \param   y     The y-position
+  \param   btn   The pressed button
+  \param   mods  The modification key
+  \remarks ...
+*/
+
+void
+DetailRenderer::mouseRelease(int x, int y, int btn, int mods)
+{
+  _mouseState.setButtonState(btn + 1, false);
+  _mouseState.setPosition((float)x, (float)(_height - y));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Mouse input
+  \param   x     The x-position
+  \param   y     The y-position
+  \remarks ...
+*/
+
+void
+DetailRenderer::mouseMove(int x, int y)
+{
+  _mouseState.setPosition((float)x, (float)(_height - y));
+
+  /// Panning
+  if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
+  {
+    std::cout << "draging" << std::endl;
+//    gloost::Vector3 mouse_drag = _mouseState.getSpeed();
+//
+//    _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Mouse scroll
+  \param   y_offset   Scroll wheel offset
+  \remarks ...
+*/
+
+void
+DetailRenderer::mouseScrollEnhance()
+{
+  // Zoom in
+  std::cout << "enhance" << std::endl;
+//  _scaleVector[0] = _scaleVector[0] * 1.1;
+//  _scaleVector[1] = _scaleVector[1] * 1.1;
+}
+
+void
+DetailRenderer::mouseScrollDecrease()
+{
+  // Zoom out
+  std::cout << "decrease" << std::endl;
+//  _scaleVector[0] = _scaleVector[0] * 0.8;
+//  _scaleVector[1] = _scaleVector[1] * 0.8;
 }
 
 
