@@ -87,6 +87,9 @@ namespace vta
       // Set all cluster position
       void set_cluster_positions();
 
+      // Return the category tree
+      Cluster* get_category_tree() const;
+
     private:
       std::vector<Node*> _nodes; /// delete
       std::vector<Edge*> _edges; /// delete
@@ -95,6 +98,9 @@ namespace vta
 
       // Clustering
       std::vector<Cluster*> _clusters;
+
+      // Category tree
+      Cluster* _category_tree;
 
       // Amount of clusters per row
       unsigned _clusters_per_row;

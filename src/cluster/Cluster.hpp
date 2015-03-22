@@ -39,6 +39,7 @@ namespace vta
       // Layout functions
       void make_radial_layout();
       void make_ring_layout();
+      void make_category_tree_layout();
 
       // Compute sum of all node weights
       unsigned get_node_weight_sum();

@@ -155,8 +155,8 @@ OverviewRenderer::initialize()
   _nodeShader->attachShader(GLOOST_SHADERPROGRAM_FRAGMENT_SHADER, "../../shaders/node.fs");
 
   // Fill vbos with new positions
-  fill_vbo_nodes();
-  fill_vbo_edges();
+//  fill_vbo_nodes();
+//  fill_vbo_edges();
 
   std::cout << "Initialized Visualization" << std::endl;
 
@@ -453,62 +453,62 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
 void
 OverviewRenderer::display()
 {
-  // setup clear color and clear screen
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  // apply viewport
-  glViewport(0, 0, _width, _height);
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  // Colors
-  gloost::vec4 red (1.0f, 0.0f, 0.0f, 1.0f);
-  gloost::vec4 blue (0.0f, 0.0f, 1.0f, 1.0f);
-  gloost::vec4 grey (0.3f, 0.3f, 0.3f, 1.0f);
-
-
-  // Draw nodes red and edges grey
-  draw_nodes_and_edges(red, grey);
-
-
-  // reset mouse events
-  _mouseState.resetMouseEvents();
-  _mouseState.setSpeedToZero();
-
-  //  Text:
-  //  - maximum and minimum displayed similarity
-  //  - number of edges and nodes
-  glPushMatrix();
-  glPushAttrib(GL_ALL_ATTRIB_BITS);
-  {
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glEnable(GL_TEXTURE_2D);
-
-    glMatrixMode(GL_PROJECTION);
-    gloostLoadMatrix(_projectionMatrix.data());
-
-    glMatrixMode(GL_MODELVIEW);
-    gloostLoadMatrix(_viewMatrix.data());
-
-    _typeWriter->beginText();
-    {
-      glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-      _typeWriter->writeLine(10.0, _height - 20.0, "Maximum similarity: " + boost::lexical_cast<std::string>(_max_similarity));
-      _typeWriter->nextLine();
-      _typeWriter->writeLine(10.0, _height - 30.0, "Minimum similarity: " + boost::lexical_cast<std::string>(_min_similarity));
-
-      _typeWriter->nextLine();
-      _typeWriter->writeLine(10.0, _height - 40.0, "Number of nodes: " + boost::lexical_cast<std::string>(_graph->get_node_num()));
-      _typeWriter->nextLine();
-      _typeWriter->writeLine(10.0, _height - 50.0, "Number of edges: " + boost::lexical_cast<std::string>(_graph->get_edge_num()));
-    }
-    _typeWriter->endText();
-  }
-  glPopAttrib();
-  glPopMatrix();
+//  // setup clear color and clear screen
+//  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+//  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//
+//  // apply viewport
+//  glViewport(0, 0, _width, _height);
+//
+//  glEnable(GL_BLEND);
+//  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//
+//  // Colors
+//  gloost::vec4 red (1.0f, 0.0f, 0.0f, 1.0f);
+//  gloost::vec4 blue (0.0f, 0.0f, 1.0f, 1.0f);
+//  gloost::vec4 grey (0.3f, 0.3f, 0.3f, 1.0f);
+//
+//
+//  // Draw nodes red and edges grey
+//  draw_nodes_and_edges(red, grey);
+//
+//
+//  // reset mouse events
+//  _mouseState.resetMouseEvents();
+//  _mouseState.setSpeedToZero();
+//
+//  //  Text:
+//  //  - maximum and minimum displayed similarity
+//  //  - number of edges and nodes
+//  glPushMatrix();
+//  glPushAttrib(GL_ALL_ATTRIB_BITS);
+//  {
+//    glDisable(GL_DEPTH_TEST);
+//    glDepthMask(GL_FALSE);
+//    glEnable(GL_TEXTURE_2D);
+//
+//    glMatrixMode(GL_PROJECTION);
+//    gloostLoadMatrix(_projectionMatrix.data());
+//
+//    glMatrixMode(GL_MODELVIEW);
+//    gloostLoadMatrix(_viewMatrix.data());
+//
+//    _typeWriter->beginText();
+//    {
+//      glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+//      _typeWriter->writeLine(10.0, _height - 20.0, "Maximum similarity: " + boost::lexical_cast<std::string>(_max_similarity));
+//      _typeWriter->nextLine();
+//      _typeWriter->writeLine(10.0, _height - 30.0, "Minimum similarity: " + boost::lexical_cast<std::string>(_min_similarity));
+//
+//      _typeWriter->nextLine();
+//      _typeWriter->writeLine(10.0, _height - 40.0, "Number of nodes: " + boost::lexical_cast<std::string>(_graph->get_node_num()));
+//      _typeWriter->nextLine();
+//      _typeWriter->writeLine(10.0, _height - 50.0, "Number of edges: " + boost::lexical_cast<std::string>(_graph->get_edge_num()));
+//    }
+//    _typeWriter->endText();
+//  }
+//  glPopAttrib();
+//  glPopMatrix();
 }
 
 

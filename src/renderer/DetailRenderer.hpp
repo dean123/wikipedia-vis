@@ -77,6 +77,11 @@ namespace vta
       gloost::Matrix _viewMatrix;
       gloost::MatrixStack _modelMatrixStack;
 
+      // Panning and Zooming
+      gloost::Matrix _translateMatrix;
+      gloost::Matrix _scaleMatrix;
+      gloost::Matrix _panning_zooming_mat;
+
       // data
       Visualization* _graph;
 
@@ -89,6 +94,8 @@ namespace vta
 
       std::shared_ptr<gloost::FreeTypeWriter> _typeWriter;
 
+
+      void panningZooming(float);
 
   };
 

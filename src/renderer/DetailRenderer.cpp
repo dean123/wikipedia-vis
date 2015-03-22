@@ -43,6 +43,10 @@ DetailRenderer::DetailRenderer(Visualization* graph):
   _viewMatrix(),
   _modelMatrixStack(),
 
+  _translateMatrix(),
+  _scaleMatrix(),
+  _panning_zooming_mat(),
+
   _graph(graph),
 
   _uniformSet(),
@@ -60,6 +64,10 @@ DetailRenderer::DetailRenderer(Visualization* graph):
   _viewMatrix.setIdentity();
   _modelMatrixStack.clear();
 
+  _translateMatrix.setIdentity();
+  _scaleMatrix.setIdentity();
+  _panning_zooming_mat.setIdentity();
+
   gloost::gl::gloostOrtho(_projectionMatrix,
                           0.0, _width,
                           0.0, _height,
@@ -71,6 +79,8 @@ DetailRenderer::DetailRenderer(Visualization* graph):
                            gloost::Vector3(0.0, 0.0, 0.0),   // look at
                            gloost::Vector3(0.0, 1.0, 0.0));  // up
 
+
+  panningZooming(0.0001);
 
   _uniformSet.set_mat4("Projection", gloost::mat4(_projectionMatrix));
   _uniformSet.set_mat4("View", gloost::mat4(_viewMatrix));
@@ -109,6 +119,9 @@ DetailRenderer::initialize()
   _nodeShader->attachShader(GLOOST_SHADERPROGRAM_GEOMETRY_SHADER, "../../shaders/node.gs");
   _nodeShader->attachShader(GLOOST_SHADERPROGRAM_FRAGMENT_SHADER, "../../shaders/node.fs");
 
+  fill_vbo_nodes();
+  fill_vbo_edges();
+
   std::cout << "Initialized Cluster Visualization" << std::endl;
 
   return true;
@@ -118,17 +131,17 @@ DetailRenderer::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-  \brief   Fills the nodes-vbo with all nodes of the cluster
+  \brief   Fills the nodes-vbo with all nodes of the category_tree
   \remarks ...
 */
 
 void
 DetailRenderer::fill_vbo_nodes()
 {
-  Cluster* cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
+  Cluster* category_tree = _graph->get_category_tree();
 
   // init nodes
-  int numNodes = cluster->get_node_num();
+  int numNodes = category_tree->get_node_num();
 
  auto interleavedAttributes = gloost::InterleavedAttributes::create();
 
@@ -144,7 +157,7 @@ DetailRenderer::fill_vbo_nodes()
 
   for (unsigned i = 0; i != numNodes; ++i)
   {
-    Node* current_node = cluster->get_node(i);
+    Node* current_node = category_tree->get_node(i);
 
     container[vboIdx++] = current_node->_x; // node x
     container[vboIdx++] = current_node->_y; // node y
@@ -167,9 +180,9 @@ DetailRenderer::fill_vbo_nodes()
 void
 DetailRenderer::fill_vbo_edges()
 {
-  Cluster* cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
+  Cluster* category_tree = _graph->get_category_tree();
 
-  int numEdges = cluster->get_edge_num();
+  int numEdges = category_tree->get_edge_num();
 
   auto interleavedAttributes = gloost::InterleavedAttributes::create();
 
@@ -185,7 +198,7 @@ DetailRenderer::fill_vbo_edges()
 
   for (unsigned i = 0; i != numEdges; ++i)
   {
-    Edge* current_edge = cluster->get_edge(i);
+    Edge* current_edge = category_tree->get_edge(i);
 
     Node* source = current_edge->getSource();
     Node* target = current_edge->getTarget();
@@ -218,10 +231,7 @@ DetailRenderer::fill_vbo_edges()
 void
 DetailRenderer::display()
 {
-  fill_vbo_nodes();
-  fill_vbo_edges();
-
-  Cluster* cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
+  Cluster* category_tree = _graph->get_category_tree();
 
   // setup clear color and clear screen
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -237,26 +247,14 @@ DetailRenderer::display()
   _modelMatrixStack.clear();
   _modelMatrixStack.push();
   {
-    // Translate Cluster to the middle of the window
-    _modelMatrixStack.translate(_width/2, _height/2, 0.0);
-
-    // Scale Cluster to window size
-    float scale = _height/(cluster->get_radius() * 2);
-    _modelMatrixStack.scale(scale, scale, 1.0);
-
-    // Translate cluster to the window
-    double cluster_x = cluster->get_position_x();
-    double cluster_y = cluster->get_position_y();
-    _modelMatrixStack.translate(-cluster_x, -cluster_y, 0.0);
+//    _modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
+//    _modelMatrixStack.scale(_scaleVector);
 
     // set current model view matrix
-    _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top()));
+    _uniformSet.set_mat4("Model", _panning_zooming_mat);
 
     _edgeShader->use();
     {
-      // Set Edge Color
-      _uniformSet.set_vec4("Color", gloost::vec4(0.3, 0.3f, 0.3f, 1.0f));
-
       _uniformSet.applyToShader(_edgeShader.get());
 
       _vboEdges->bind();
@@ -268,9 +266,6 @@ DetailRenderer::display()
 
     _nodeShader->use();
     {
-      // Set Node Color
-      _uniformSet.set_vec4("Color", gloost::vec4(1.0, 0.0f, 0.0f, 1.0f));
-
       _uniformSet.applyToShader(_nodeShader.get());
 
       _vboNodes->bind();
@@ -280,67 +275,67 @@ DetailRenderer::display()
     _nodeShader->disable();
   }
   _modelMatrixStack.pop();
-
-
-  // LABEL NODES
-  for (unsigned i = 0; i != cluster->get_node_num(); ++i)
-  {
-    Node* current_node = cluster->get_node(i);
-
-    gloost::Vector3 text_position(current_node->_x, current_node->_y, 0.0);
-
-    // Scale Cluster to window size
-    gloost::Matrix model_matrix;
-    float scale = _height/(cluster->get_radius() * 2);
-
-    model_matrix.setScale(gloost::Vector3(scale, scale,0.0));
-
-    text_position = model_matrix * text_position;
-
-    // Translate from original cluster position to 0,0
-    text_position[0] -= cluster->get_position_x() * scale;
-    text_position[1] -= cluster->get_position_y() * scale;
-
-    // translate to the middle of the screen
-    text_position[0] += _width/2;
-    text_position[1] += _height/2;
-
-    std::string label = current_node->_label;
-
-    // draw text
-    glPushMatrix();
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    {
-      glDisable(GL_DEPTH_TEST);
-      glDepthMask(GL_FALSE);
-      glEnable(GL_TEXTURE_2D);
-
-      glMatrixMode(GL_PROJECTION);
-      gloostLoadMatrix(_projectionMatrix.data());
-
-      glMatrixMode(GL_MODELVIEW);
-      gloostLoadMatrix(_viewMatrix.data());
-
-      /// _typewriter functions
-      /*
-      // cuts a line, so it is not longer as maxPixelLength with the current font
-      std::string cutLineToLength(const std::string& text, unsigned maxPixelLength) const;
-
-      // sets the scaling
-      void setScale(float scale);
-      */
-
-      _typeWriter->beginText();
-      _typeWriter->setScale(2.0);
-      {
-        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-        _typeWriter->writeLine(text_position[0], text_position[1], label);
-      }
-      _typeWriter->endText();
-    }
-    glPopAttrib();
-    glPopMatrix();
-  }
+//
+//
+//  // LABEL NODES
+//  for (unsigned i = 0; i != cluster->get_node_num(); ++i)
+//  {
+//    Node* current_node = cluster->get_node(i);
+//
+//    gloost::Vector3 text_position(current_node->_x, current_node->_y, 0.0);
+//
+//    // Scale Cluster to window size
+//    gloost::Matrix model_matrix;
+//    float scale = _height/(cluster->get_radius() * 2);
+//
+//    model_matrix.setScale(gloost::Vector3(scale, scale,0.0));
+//
+//    text_position = model_matrix * text_position;
+//
+//    // Translate from original cluster position to 0,0
+//    text_position[0] -= cluster->get_position_x() * scale;
+//    text_position[1] -= cluster->get_position_y() * scale;
+//
+//    // translate to the middle of the screen
+//    text_position[0] += _width/2;
+//    text_position[1] += _height/2;
+//
+//    std::string label = current_node->_label;
+//
+//    // draw text
+//    glPushMatrix();
+//    glPushAttrib(GL_ALL_ATTRIB_BITS);
+//    {
+//      glDisable(GL_DEPTH_TEST);
+//      glDepthMask(GL_FALSE);
+//      glEnable(GL_TEXTURE_2D);
+//
+//      glMatrixMode(GL_PROJECTION);
+//      gloostLoadMatrix(_projectionMatrix.data());
+//
+//      glMatrixMode(GL_MODELVIEW);
+//      gloostLoadMatrix(_viewMatrix.data());
+//
+//      /// _typewriter functions
+//      /*
+//      // cuts a line, so it is not longer as maxPixelLength with the current font
+//      std::string cutLineToLength(const std::string& text, unsigned maxPixelLength) const;
+//
+//      // sets the scaling
+//      void setScale(float scale);
+//      */
+//
+//      _typeWriter->beginText();
+//      _typeWriter->setScale(2.0);
+//      {
+//        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+//        _typeWriter->writeLine(text_position[0], text_position[1], label);
+//      }
+//      _typeWriter->endText();
+//    }
+//    glPopAttrib();
+//    glPopMatrix();
+//  }
 }
 
 
@@ -421,13 +416,37 @@ DetailRenderer::mouseMove(int x, int y)
   _mouseState.setPosition((float)x, (float)(_height - y));
 
   /// Panning
+  gloost::Matrix old_trans_matrix = _translateMatrix;
+
   if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
   {
-    std::cout << "draging" << std::endl;
-//    gloost::Vector3 mouse_drag = _mouseState.getSpeed();
-//
-//    _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
+    gloost::Vector3 mouse_drag = _mouseState.getSpeed();
+
+    gloost::Vector3 scale_vector = _scaleMatrix.getScale();
+
+    _translateMatrix.setTranslate(mouse_drag[0] / (scale_vector[0] * 2000.0),
+                                  mouse_drag[1] / (scale_vector[1] * 2000.0),
+                                  0.0);
+
+    _translateMatrix = old_trans_matrix * _translateMatrix;
+
+    panningZooming(1.0);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void
+DetailRenderer::panningZooming(float scale)
+{
+  gloost::Matrix new_scale_mat;
+
+  new_scale_mat.setIdentity();
+  new_scale_mat.setScale(scale);
+
+  _scaleMatrix = _scaleMatrix * new_scale_mat;
+
+  _panning_zooming_mat = _scaleMatrix * _translateMatrix;
 }
 
 
@@ -443,18 +462,14 @@ void
 DetailRenderer::mouseScrollEnhance()
 {
   // Zoom in
-  std::cout << "enhance" << std::endl;
-//  _scaleVector[0] = _scaleVector[0] * 1.1;
-//  _scaleVector[1] = _scaleVector[1] * 1.1;
+  panningZooming(1.1);
 }
 
 void
 DetailRenderer::mouseScrollDecrease()
 {
   // Zoom out
-  std::cout << "decrease" << std::endl;
-//  _scaleVector[0] = _scaleVector[0] * 0.8;
-//  _scaleVector[1] = _scaleVector[1] * 0.8;
+  panningZooming(0.8);
 }
 
 
