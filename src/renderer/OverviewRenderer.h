@@ -1,5 +1,5 @@
-#ifndef H_VTA_VISUALIZATION
-#define H_VTA_VISUALIZATION
+#ifndef H_VTA_OVERVIEW_RENDERER
+#define H_VTA_OVERVIEW_RENDERER
 
 // gloost
 #include <gloost/gl/ShaderProgram.h>
@@ -23,26 +23,23 @@
 #include <GL/gl.h>
 
 // Graph
-#include <graph/Graph.hpp>
-
-// Cluster
-#include <cluster/ClusterVis.hpp>
+#include <cluster/Visualization.hpp>
 
 
 namespace vta
 {
 
 
-class Visualization
+class OverviewRenderer
 {
 
   public:
 
     // class constructor
-    Visualization(Graph*);
+    OverviewRenderer(Visualization*);
 
     // class destructor
-    virtual ~Visualization();
+    virtual ~OverviewRenderer();
 
 
     // initialize
@@ -56,13 +53,13 @@ class Visualization
     void fill_vbo_nodes();
     void fill_vbo_edges();
 
-    // Draw nodes and edges
+    // Draw nodes and edges (node-color, edge-color)
     void draw_nodes_and_edges(gloost::vec4, gloost::vec4);
 
-    // display
+    // display loop
     void display();
 
-    // resize
+    // resize window
     void resize(int width, int height);
 
     // Get Cluster index from mouse position
@@ -91,14 +88,14 @@ class Visualization
 
   protected:
 
-    // size
+    // Window size
     int _width;
     int _height;
 
     // holding the current mouse state
     gloost::human_input::MouseState _mouseState;
 
-    //
+    // MVP
     gloost::Matrix _projectionMatrix;
     gloost::Matrix _viewMatrix;
     gloost::MatrixStack _modelMatrixStack;
@@ -108,7 +105,7 @@ class Visualization
     gloost::Vector3 _scaleVector;
 
     // data
-    Graph* _graph;
+    Visualization* _graph;
 
     // Similarity thresholds
     double _max_similarity;
@@ -126,9 +123,10 @@ class Visualization
     std::shared_ptr<gloost::gl::Vbo4> _vboNodes;
     std::shared_ptr<gloost::gl::Vbo4> _vboEdges;
 
+    // typewriter for text rendering
     std::shared_ptr<gloost::FreeTypeWriter> _typeWriter;
 
-    // Toggle if nodes should be highlighted
+    // Toggle if nodes should be highlighted at mouse over
     bool _highlight_at_mouse_over;
 
     // Vector with all cluster vbos
@@ -144,6 +142,6 @@ class Visualization
 } // namespace vta
 
 
-#endif // H_VTA_VISUALIZATION
+#endif // H_VTA_OVERVIEW_RENDERER
 
 

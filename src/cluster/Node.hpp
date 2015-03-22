@@ -2,7 +2,7 @@
 #define NODE_HPP
 
 // vta
-#include <graph/Edge.hpp>
+#include <cluster/Edge.hpp>
 
 // cpp
 #include <vector>

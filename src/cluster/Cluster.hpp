@@ -2,7 +2,7 @@
 #define CLUSTER_HPP
 
 // vta
-#include <graph/Graph.hpp>
+#include <cluster/Visualization.hpp>
 
 namespace vta
 {

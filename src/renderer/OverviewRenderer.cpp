@@ -1,4 +1,4 @@
-#include "Visualization.h"
+#include "OverviewRenderer.h"
 
 // gloost
 #include <gloost/BinaryFile.h>
@@ -28,7 +28,7 @@ namespace vta
 {
 
 /**
-  \class   Visualization
+  \class   OverviewRenderer
 
   \brief   ...
 
@@ -45,7 +45,7 @@ namespace vta
   \remarks ...
 */
 
-Visualization::Visualization(Graph* graph):
+OverviewRenderer::OverviewRenderer(Visualization* graph):
   _width(0),
   _height(0),
   _mouseState(),
@@ -55,7 +55,6 @@ Visualization::Visualization(Graph* graph):
   _modelMatrixStack(),
 
   _translateVector(0.0, 0.0, 0.0),
-//  _scaleVector(1.0, 1.0, 1.0),
   _scaleVector(0.000005, 0.000005, 1.0),
 
   _graph(graph),
@@ -114,7 +113,7 @@ Visualization::Visualization(Graph* graph):
 */
 
 /*virtual*/
-Visualization::~Visualization()
+OverviewRenderer::~OverviewRenderer()
 {
 }
 
@@ -127,34 +126,8 @@ Visualization::~Visualization()
 */
 
 bool
-Visualization::initialize()
+OverviewRenderer::initialize()
 {
-  // Simple test graph
-//  for (unsigned i = 0; i != 100000; i+=10)
-//  {
-//    Node* node0 = _graph->create_node(i,"test");
-//    Node* node1 = _graph->create_node(i+1,"test");
-//    Node* node2 = _graph->create_node(i+2,"test");
-//    Node* node3 = _graph->create_node(i+3,"test");
-//    Node* node4 = _graph->create_node(i+4,"test");
-//    Node* node5 = _graph->create_node(i+5,"test");
-//    Node* node6 = _graph->create_node(i+6,"test");
-//    Node* node7 = _graph->create_node(i+7,"test");
-//    Node* node8 = _graph->create_node(i+8,"test");
-//    Node* node9 = _graph->create_node(i+9,"test");
-//
-//    _graph->create_edge(node0, node1, 0.9);
-//    _graph->create_edge(node0, node2, 0.9);
-//    _graph->create_edge(node0, node3, 0.9);
-//    _graph->create_edge(node0, node4, 0.9);
-//    _graph->create_edge(node2, node9, 0.9);
-//    _graph->create_edge(node8, node7, 0.9);
-//  }
-//
-//
-//  _graph->search_clusters();
-//  _graph->set_cluster_positions();
-
   std::cout << "Number of clusters: " << _graph->get_cluster_num() << std::endl;
 
   for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
@@ -183,7 +156,7 @@ Visualization::initialize()
 
   // Fill vbos with new positions
   fill_vbo_nodes();
-//  fill_vbo_edges();
+  fill_vbo_edges();
 
   std::cout << "Initialized Visualization" << std::endl;
 
@@ -194,48 +167,12 @@ Visualization::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-  \brief   Fills the nodes-vbo with all nodes of _graph
-  \remarks ...
-*/
-
-//void
-//Visualization::initialize_vbos()
-//{
-//  // init nodes
-//  int numNodes = 3000000; // MAX_NUM_NODES
-//  auto interleavedAttributes = gloost::InterleavedAttributes::create();
-//  unsigned containerSize = numNodes * 2; // vec2
-//  std::vector<float>& container = interleavedAttributes->getVector();
-//  container = std::vector<float>(containerSize, 0.0f);
-//  // tell the vertex attribute container which attributes are contained
-//  interleavedAttributes->addAttribute(2, 8, "in_position");
-//  unsigned vboIdx = 0;
-//
-//  for (unsigned i = 0; i != numNodes; ++i)
-//  {
-//    Node* current_node = _graph->get_node_by_index(i);
-//
-//    std::string title = current_node->_label;
-//
-//    if (!blacklist_constains(title))
-//    {
-//      container[vboIdx++] = current_node->_x; // node x
-//      container[vboIdx++] = current_node->_y; // node y
-//    }
-//  }
-//  _vboNodes = gloost::gl::Vbo4::create(interleavedAttributes);
-//}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
   \brief   Add new node-vbo for new cluster
   \remarks ...
 */
 
 void
-Visualization::create_cluster_node_vbo(Cluster* current_cluster)
+OverviewRenderer::create_cluster_node_vbo(Cluster* current_cluster)
 {
   std::shared_ptr<gloost::gl::Vbo4> vboNodes;
 
@@ -284,7 +221,7 @@ Visualization::create_cluster_node_vbo(Cluster* current_cluster)
 */
 
 void
-Visualization::create_cluster_edge_vbo(Cluster* current_cluster)
+OverviewRenderer::create_cluster_edge_vbo(Cluster* current_cluster)
 {
   std::shared_ptr<gloost::gl::Vbo4> vboEdge;
 
@@ -349,7 +286,7 @@ Visualization::create_cluster_edge_vbo(Cluster* current_cluster)
 */
 
 void
-Visualization::fill_vbo_nodes()
+OverviewRenderer::fill_vbo_nodes()
 {
   // init nodes
   int numNodes = _graph->get_node_num();
@@ -394,7 +331,7 @@ Visualization::fill_vbo_nodes()
 */
 
 void
-Visualization::fill_vbo_edges()
+OverviewRenderer::fill_vbo_edges()
 {
   int numEdges = _graph->get_edge_num();
 
@@ -454,7 +391,7 @@ Visualization::fill_vbo_edges()
 */
 
 void
-Visualization::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 edges_color)
+OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 edges_color)
 {
   // set modelview matrix
   _modelMatrixStack.clear();
@@ -465,23 +402,23 @@ Visualization::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 edges
 
     _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top())); // set current model view matrix
 
-//    _edgeShader->use();
-//    {
-//      _uniformSet.applyToShader(_edgeShader.get());
-//
-////      for (unsigned i = 0; i != _cluster_edge_vbo.size(); ++i)
-////      {
-////        _cluster_edge_vbo[i]->bind();
-////        _cluster_edge_vbo[i]->draw(GL_LINES);
-////        _cluster_edge_vbo[i]->unbind();
-////      }
-//
-//      _vboEdges->bind();
-//      _vboEdges->draw(GL_LINES);
-//      _vboEdges->unbind();
-//
-//    }
-//    _edgeShader->disable();
+    _edgeShader->use();
+    {
+      _uniformSet.applyToShader(_edgeShader.get());
+
+//      for (unsigned i = 0; i != _cluster_edge_vbo.size(); ++i)
+//      {
+//        _cluster_edge_vbo[i]->bind();
+//        _cluster_edge_vbo[i]->draw(GL_LINES);
+//        _cluster_edge_vbo[i]->unbind();
+//      }
+
+      _vboEdges->bind();
+      _vboEdges->draw(GL_LINES);
+      _vboEdges->unbind();
+
+    }
+    _edgeShader->disable();
 
 
     _nodeShader->use();
@@ -514,7 +451,7 @@ Visualization::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 edges
 */
 
 void
-Visualization::display()
+OverviewRenderer::display()
 {
   // setup clear color and clear screen
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -585,7 +522,7 @@ Visualization::display()
 */
 
 void
-Visualization::resize(int width, int height)
+OverviewRenderer::resize(int width, int height)
 {
   _width  = width;
   _height = height;
@@ -607,7 +544,7 @@ Visualization::resize(int width, int height)
 */
 
 unsigned
-Visualization::get_cluster_index_from_mouse_pos(gloost::Vector3& mouse_position)
+OverviewRenderer::get_cluster_index_from_mouse_pos(gloost::Vector3& mouse_position)
 {
   unsigned idx = _graph->get_cluster_num()+1;
 
@@ -647,7 +584,7 @@ Visualization::get_cluster_index_from_mouse_pos(gloost::Vector3& mouse_position)
 */
 
 void
-Visualization::mousePress(int x, int y, int btn, int mods)
+OverviewRenderer::mousePress(int x, int y, int btn, int mods)
 {
   _mouseState.setButtonState(btn + 1, true);
   _mouseState.setPosition((float)x, (float)(_height - y));
@@ -665,7 +602,7 @@ Visualization::mousePress(int x, int y, int btn, int mods)
       Cluster* clicked_cluster = _graph->get_cluster_by_index(cluster_idx);
 
 
-        /// Get infos about clicked node --> seg fault
+        /// Get infos about clicked node
 //      double node_size = 15000.0;
 //      for (unsigned i = 0; i != clicked_cluster->get_node_num(); ++i)
 //      {
@@ -697,7 +634,7 @@ Visualization::mousePress(int x, int y, int btn, int mods)
 */
 
 void
-Visualization::mouseRelease(int x, int y, int btn, int mods)
+OverviewRenderer::mouseRelease(int x, int y, int btn, int mods)
 {
   _mouseState.setButtonState(btn + 1, false);
   _mouseState.setPosition((float)x, (float)(_height - y));
@@ -714,7 +651,7 @@ Visualization::mouseRelease(int x, int y, int btn, int mods)
 */
 
 void
-Visualization::mouseMove(int x, int y)
+OverviewRenderer::mouseMove(int x, int y)
 {
   _mouseState.setPosition((float)x, (float)(_height - y));
 
@@ -790,7 +727,7 @@ Visualization::mouseMove(int x, int y)
 */
 
 void
-Visualization::mouseScrollEnhance()
+OverviewRenderer::mouseScrollEnhance()
 {
   // Zoom in
   _scaleVector[0] = _scaleVector[0] * 1.1;
@@ -798,7 +735,7 @@ Visualization::mouseScrollEnhance()
 }
 
 void
-Visualization::mouseScrollDecrease()
+OverviewRenderer::mouseScrollDecrease()
 {
   // Zoom out
   _scaleVector[0] = _scaleVector[0] * 0.8;
@@ -816,7 +753,7 @@ Visualization::mouseScrollDecrease()
 */
 
 void
-Visualization::keyPress(int key, int mods)
+OverviewRenderer::keyPress(int key, int mods)
 {
   // http://www.glfw.org/docs/latest/group__keys.html
 
@@ -913,7 +850,7 @@ Visualization::keyPress(int key, int mods)
 */
 
 void
-Visualization::keyRelease(int key, int mods)
+OverviewRenderer::keyRelease(int key, int mods)
 {
 }
 
@@ -928,14 +865,14 @@ Visualization::keyRelease(int key, int mods)
 */
 
 void
-Visualization::set_minimum_similarity(double sim)
+OverviewRenderer::set_minimum_similarity(double sim)
 {
   _min_similarity = sim;
 }
 
 
 void
-Visualization::set_maximum_similarity(double sim)
+OverviewRenderer::set_maximum_similarity(double sim)
 {
   _max_similarity = sim;
 }
@@ -950,7 +887,7 @@ Visualization::set_maximum_similarity(double sim)
 */
 
 void
-Visualization::add_to_blacklist(std::string const title)
+OverviewRenderer::add_to_blacklist(std::string const title)
 {
   if(std::find(_blacklist.begin(), _blacklist.end(), title) != _blacklist.end())
   {
@@ -964,7 +901,7 @@ Visualization::add_to_blacklist(std::string const title)
 
 
 bool
-Visualization::blacklist_constains(std::string const title)
+OverviewRenderer::blacklist_constains(std::string const title)
 {
 	for (unsigned i = 0; i != _blacklist.size(); i++)
   {
@@ -980,7 +917,7 @@ Visualization::blacklist_constains(std::string const title)
 
 
 std::vector<std::string>
-Visualization::get_blacklist()
+OverviewRenderer::get_blacklist()
 {
   return _blacklist;
 }

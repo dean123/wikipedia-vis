@@ -1,8 +1,8 @@
-#ifndef GRAPH_HPP
-#define GRAPH_HPP
+#ifndef VISUALIZATION_HPP
+#define VISUALIZATION_HPP
 
 // vta
-#include <graph/Edge.hpp>
+#include <cluster/Edge.hpp>
 #include <cluster/Cluster.hpp>
 
 // cpp
@@ -44,15 +44,15 @@ namespace vta
   class Cluster;
 
 
-  class Graph
+  class Visualization
   {
     public:
 
       // class constructor
-      Graph();
+      Visualization();
 
       // class destructor
-      virtual ~Graph();
+      virtual ~Visualization();
 
       // Create Nodes and Edges
       Node* create_node(long, std::string const, Article);
@@ -69,10 +69,8 @@ namespace vta
       unsigned get_cluster_num() const;
       Cluster* get_cluster_by_index(unsigned);
 
-      // Create Graph from data base
+      // Create Visualization from data base
       void create_graph_from_db(const char input_file_name[], const char offset_file_name[]); // replace durch get cluster
-
-      void print_graph_to_console(); /// delete
 
       // Get cluster size
       double get_cluster_size() const; // Allgemeine Cluster size
@@ -110,4 +108,4 @@ namespace vta
 
 } // Namespace vta
 
-#endif // GRAPH
+#endif // VISUALIZATION_HPP

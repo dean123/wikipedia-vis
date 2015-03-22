@@ -1,4 +1,4 @@
-#include "Graph.hpp"
+#include "Visualization.hpp"
 
 
 
@@ -13,7 +13,7 @@ namespace vta
   \remarks ...
 */
 
-Graph::Graph()
+Visualization::Visualization()
 :
   _detail_view_cluster_index(0),
 
@@ -37,7 +37,7 @@ Graph::Graph()
 */
 
 /*virtual*/
-Graph::~Graph()
+Visualization::~Visualization()
 {}
 
 
@@ -49,7 +49,7 @@ Graph::~Graph()
 */
 
 Node*
-Graph::create_node(long index, std::string const label, Article article)
+Visualization::create_node(long index, std::string const label, Article article)
 {
   Node* newNode = new Node(index, label, article);
 
@@ -67,7 +67,7 @@ Graph::create_node(long index, std::string const label, Article article)
 */
 
 Edge*
-Graph::create_edge(Node* source, Node* target, double weight)
+Visualization::create_edge(Node* source, Node* target, double weight)
 {
   Edge* newEdge = new Edge(_edges.size(), source, target, weight);
 
@@ -88,7 +88,7 @@ Graph::create_edge(Node* source, Node* target, double weight)
 */
 
 Edge*
-Graph::get_edge_by_index(long index)
+Visualization::get_edge_by_index(long index)
 {
   return _edges[index];
 }
@@ -102,7 +102,7 @@ Graph::get_edge_by_index(long index)
 */
 
 Node*
-Graph::get_node_by_index(long index)
+Visualization::get_node_by_index(long index)
 {
   return _nodes[index];
 }
@@ -116,7 +116,7 @@ Graph::get_node_by_index(long index)
 */
 
 int
-Graph::get_node_num() const
+Visualization::get_node_num() const
 {
   return _nodes.size();
 }
@@ -130,7 +130,7 @@ Graph::get_node_num() const
 */
 
 int
-Graph::get_edge_num() const
+Visualization::get_edge_num() const
 {
   return _edges.size();
 }
@@ -144,7 +144,7 @@ Graph::get_edge_num() const
 */
 
 unsigned
-Graph::get_cluster_num() const
+Visualization::get_cluster_num() const
 {
   return _clusters.size();
 }
@@ -158,7 +158,7 @@ Graph::get_cluster_num() const
 */
 
 Cluster*
-Graph::get_cluster_by_index(unsigned index)
+Visualization::get_cluster_by_index(unsigned index)
 {
   return _clusters[index];
 }
@@ -172,7 +172,7 @@ Graph::get_cluster_by_index(unsigned index)
 */
 
 bool
-Graph::node_map_contains_id(int id)
+Visualization::node_map_contains_id(int id)
 {
   std::map<uint32_t,Node*>::iterator it = _index2node.find(id);
 
@@ -197,9 +197,9 @@ bool cluster_compare_func (Cluster* i, Cluster* j) { return (i->get_node_num() >
 */
 
 void
-Graph::create_graph_from_db(const char g_bin_data_filename[], const char offset_file_name[])
+Visualization::create_graph_from_db(const char g_bin_data_filename[], const char offset_file_name[])
 {
-    std::cout << "in create_graph_from_db`" << std::endl;
+    std::cout << "in create_Visualization_from_db`" << std::endl;
     WikiDB wikidb("/media/HDD/testdb/pages");
     std::vector<uint32_t> articleVec = wikidb.getArticles();
     std::vector<uint32_t> categoryVec = wikidb.getCategories();
@@ -207,114 +207,85 @@ Graph::create_graph_from_db(const char g_bin_data_filename[], const char offset_
     std::cout << "article vec size " << articleVec.size() << std::endl;
     std::cout << "category vec size " << categoryVec.size() << std::endl;
 
-    Article article = wikidb.getArticle(1);
+//    Article article = wikidb.getArticle(1);
+//
+//    Cluster* category_tree = new Cluster();
+//
+//    for (auto k : categoryVec)
+//    {
+//      Category category = wikidb.getCategory(k);
+//
+//      if(!node_map_contains_id(k))
+//      {
+//        _index2node[k] = create_node(k,category.title, article);
+//        category_tree->add_node(_index2node[k]);
+//      }
+//
+//      std::vector<uint32_t> parents = category.getParents();
+//
+//      for(unsigned j = 0; j < parents.size(); ++j)
+//      {
+//        uint32_t index = parents[j];
+//
+//        Category parent = wikidb.getCategory(index);
+//        if (!node_map_contains_id(index))
+//        {
+//          _index2node[index] = create_node(index, parent.title, article);
+//          category_tree->add_node(_index2node[index]);
+//        }
+//
+//
+//        category_tree->add_edge(create_edge(_index2node[k], _index2node[index], 0.9));
+//      }
+//    }
+//
+//    _clusters.push_back(category_tree);
 
-    Cluster* category_tree = new Cluster();
 
-    for (auto k : categoryVec)
-    {
-      Category category = wikidb.getCategory(k);
 
-      if(!node_map_contains_id(k))
+    for (auto i : articleVec) {
+      Article article = wikidb.getArticle(i);
+      //Article articel(*i);
+      std::vector<SimPair> compVector = article.getComparisons();
+
+      if(!node_map_contains_id(i))
+        _index2node[article.index] = create_node(article.index,article.title, article);
+
+
+      for(unsigned k = 0; k < compVector.size(); ++k)
       {
-        _index2node[k] = create_node(k,category.title, article);
-        category_tree->add_node(_index2node[k]);
-      }
+        if (k == 100)
+          break;
 
-      std::vector<uint32_t> parents = category.getParents();
+        SimPair current_sim_pair = compVector[k];
 
-      for(unsigned j = 0; j < parents.size(); ++j)
-      {
-        uint32_t index = parents[j];
+        uint32_t index = current_sim_pair.getIndex();
 
-        Category parent = wikidb.getCategory(index);
+        Article article2 = wikidb.getArticle(index);
+
         if (!node_map_contains_id(index))
-        {
-          _index2node[index] = create_node(index, parent.title, article);
-          category_tree->add_node(_index2node[index]);
-        }
+          _index2node[index] = create_node(index, article2.title, article2);
 
+        uint32_t sim = current_sim_pair.getSim();
 
-        category_tree->add_edge(create_edge(_index2node[k], _index2node[index], 0.9));
+        double similarity = sim;
+        similarity = similarity / 1000;
+
+        Edge* new_edge = create_edge(_index2node[article.index], _index2node[index], similarity);
+
+        new_edge->_color[0] = 0.0f;
+        new_edge->_color[1] = 0.0f;
+        new_edge->_color[2] = similarity;
       }
     }
 
-    _clusters.push_back(category_tree);
-
-
-
-//    for (auto i : articleVec) {
-//      Article article = wikidb.getArticle(i);
-//      //Article articel(*i);
-//      std::vector<SimPair> compVector = article.getComparisons();
-//
-//      if(!node_map_contains_id(i))
-//        _index2node[article.index] = create_node(article.index,article.title, article);
-//
-//
-//      for(unsigned k = 0; k < compVector.size(); ++k)
-//      {
-////        if (k == 100)
-////          break;
-//
-//        SimPair current_sim_pair = compVector[k];
-//
-//        uint32_t index = current_sim_pair.getIndex();
-//
-//        Article article2 = wikidb.getArticle(index);
-//
-//        if (!node_map_contains_id(index))
-//          _index2node[index] = create_node(index, article2.title, article2);
-//
-//        uint32_t sim = current_sim_pair.getSim();
-//
-//        double similarity = sim;
-//        similarity = similarity / 1000;
-//
-//        Edge* new_edge = create_edge(_index2node[article.index], _index2node[index], similarity);
-//
-//        new_edge->_color[0] = 0.0f;
-//        new_edge->_color[1] = 0.0f;
-//        new_edge->_color[2] = similarity;
-//      }
-//    }
-
-//      search_clusters();
-//      std::sort (_clusters.begin(), _clusters.end(), cluster_compare_func);
+      search_clusters();
+      std::sort (_clusters.begin(), _clusters.end(), cluster_compare_func);
 
       set_cluster_positions();
 
       std::cout << "created from db" << std::endl;
   }
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
-  \brief   Prints the graph to console
-  \remarks Für große Graphen relativ sinnlos
-*/
-
-void
-Graph::print_graph_to_console()
-{
-  std::cout << "Node IDs: " << std::endl;
-  for (unsigned i = 0; i != _nodes.size(); i++)
-  {
-    Node* currentNode = _nodes[i];
-    std::cout << currentNode->_index << std::endl;
-  }
-
-  std::cout << "Edges: " << std::endl;
-  for (unsigned i = 0; i != _edges.size(); i++)
-  {
-    Edge* currentEdge = _edges[i];
-
-    Node* source = currentEdge->getSource();
-    Node* target = currentEdge->getTarget();
-
-    std::cout << "From: " << source->_index << "  to: " << target->_index << std::endl;
-  }
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,7 +296,7 @@ Graph::print_graph_to_console()
 */
 
 double
-Graph::get_cluster_size() const
+Visualization::get_cluster_size() const
 {
   return _cluster_size;
 }
@@ -339,7 +310,7 @@ Graph::get_cluster_size() const
 */
 
 unsigned
-Graph::get_clusters_per_row_num() const
+Visualization::get_clusters_per_row_num() const
 {
   return _clusters_per_row;
 }
@@ -353,7 +324,7 @@ Graph::get_clusters_per_row_num() const
 */
 
 void
-Graph::visit_node(Node* v1, Cluster* current_cluster)
+Visualization::visit_node(Node* v1, Cluster* current_cluster)
 {
   if(!v1->_visited)
   {
@@ -389,7 +360,7 @@ Graph::visit_node(Node* v1, Cluster* current_cluster)
 */
 
 void
-Graph::search_clusters()
+Visualization::search_clusters()
 {
   std::cout << "Searching for clusters..." << std::endl;
 
@@ -418,7 +389,7 @@ Graph::search_clusters()
 */
 
 void
-Graph::set_cluster_positions()
+Visualization::set_cluster_positions()
 {
   std::cout << _clusters.size() << std::endl;
 

@@ -2,7 +2,7 @@
 #define EDGE_HPP
 
 // vta
-#include <graph/Node.hpp>
+#include <cluster/Node.hpp>
 
 
 namespace vta

@@ -1,5 +1,5 @@
-#ifndef VTA_CLUSTERVIS
-#define VTA_CLUSTERVIS
+#ifndef VTA_DETAIL_RENDERER
+#define VTA_DETAIL_RENDERER
 
 // gloost
 #include <gloost/gl/ShaderProgram.h>
@@ -23,7 +23,7 @@
 #include <GL/gl.h>
 
 // Graph
-#include <graph/Edge.hpp>
+#include <cluster/Edge.hpp>
 // Cluster
 #include <cluster/Cluster.hpp>
 
@@ -31,17 +31,16 @@
 namespace vta
 {
 
-  class ClusterVis
+  class DetailRenderer
   {
 
     public:
 
       // class constructor
-      ClusterVis(Graph*);
+      DetailRenderer(Visualization*);
 
       // class destructor
-      virtual ~ClusterVis();
-
+      virtual ~DetailRenderer();
 
       // initialize
       bool initialize();
@@ -69,7 +68,7 @@ namespace vta
       gloost::MatrixStack _modelMatrixStack;
 
       // data
-      Graph* _graph;
+      Visualization* _graph;
 
       // gl ressources
       gloost::gl::UniformSet _uniformSet;
@@ -88,4 +87,4 @@ namespace vta
 } // namespace vta
 
 
-#endif // VTA_CLUSTERVIS
+#endif // VTA_DETAIL_RENDERER

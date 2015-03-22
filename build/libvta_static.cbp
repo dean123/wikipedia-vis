@@ -87,18 +87,18 @@
 		<Unit filename="../shaders/node.fs" />
 		<Unit filename="../shaders/node.gs" />
 		<Unit filename="../shaders/node.vs" />
-		<Unit filename="../src/Visualization.cpp" />
-		<Unit filename="../src/Visualization.h" />
 		<Unit filename="../src/cluster/Cluster.cpp" />
 		<Unit filename="../src/cluster/Cluster.hpp" />
-		<Unit filename="../src/cluster/ClusterVis.cpp" />
-		<Unit filename="../src/cluster/ClusterVis.hpp" />
-		<Unit filename="../src/graph/Edge.cpp" />
-		<Unit filename="../src/graph/Edge.hpp" />
-		<Unit filename="../src/graph/Graph.cpp" />
-		<Unit filename="../src/graph/Graph.hpp" />
-		<Unit filename="../src/graph/Node.cpp" />
-		<Unit filename="../src/graph/Node.hpp" />
+		<Unit filename="../src/cluster/Edge.cpp" />
+		<Unit filename="../src/cluster/Edge.hpp" />
+		<Unit filename="../src/cluster/Node.cpp" />
+		<Unit filename="../src/cluster/Node.hpp" />
+		<Unit filename="../src/cluster/Visualization.cpp" />
+		<Unit filename="../src/cluster/Visualization.hpp" />
+		<Unit filename="../src/renderer/DetailRenderer.cpp" />
+		<Unit filename="../src/renderer/DetailRenderer.hpp" />
+		<Unit filename="../src/renderer/OverviewRenderer.cpp" />
+		<Unit filename="../src/renderer/OverviewRenderer.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

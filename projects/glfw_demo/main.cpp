@@ -1,6 +1,6 @@
 // vta
-#include <Visualization.h>
-#include <cluster/ClusterVis.hpp>
+#include <renderer/OverviewRenderer.h>
+#include <renderer/DetailRenderer.hpp>
 
 // gl
 #include <GL/glew.h>
@@ -20,14 +20,14 @@
 #include <stdlib.h>
 
 // Graph for tests
-#include <graph/Graph.hpp>
+#include <cluster/Visualization.hpp>
 
 
-vta::Visualization* g_visualization;
-vta::ClusterVis* cluster_visualization;
+vta::OverviewRenderer* overview_renderer;
+vta::DetailRenderer* detail_renderer;
 
 // GRAPH
-vta::Graph* graph;
+vta::Visualization* graph;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -39,12 +39,12 @@ vta::Graph* graph;
 
 void main_window_display()
 {
-  g_visualization->display();
+  overview_renderer->display();
 }
 
 void cluster_window_display()
 {
-  cluster_visualization->display();
+  detail_renderer->display();
 }
 
 
@@ -59,12 +59,12 @@ void cluster_window_display()
 
 void main_window_resizefun(GLFWwindow* window, int width, int height)
 {
-  g_visualization->resize(width, height);
+  overview_renderer->resize(width, height);
 }
 
 void cluster_window_resizefun(GLFWwindow* window, int width, int height)
 {
-  cluster_visualization->resize(width, height);
+  detail_renderer->resize(width, height);
 }
 
 
@@ -88,9 +88,9 @@ void main_window_mousebuttonfun(GLFWwindow* window, int button, int action, int 
   glfwGetCursorPos(window, &xpos, &ypos);
 
   if (action)
-    g_visualization->mousePress(xpos, ypos, button, mods);
+    overview_renderer->mousePress(xpos, ypos, button, mods);
   else
-    g_visualization->mouseRelease(xpos, ypos, button, mods);
+    overview_renderer->mouseRelease(xpos, ypos, button, mods);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +106,9 @@ void main_window_mousebuttonfun(GLFWwindow* window, int button, int action, int 
 void main_window_scrollfun(GLFWwindow* window, double xoffset, double yoffset)
 {
   if (yoffset > 0)
-    g_visualization->mouseScrollEnhance();
+    overview_renderer->mouseScrollEnhance();
   else
-    g_visualization->mouseScrollDecrease();
+    overview_renderer->mouseScrollDecrease();
 }
 
 
@@ -124,7 +124,7 @@ void main_window_scrollfun(GLFWwindow* window, double xoffset, double yoffset)
 
 void main_window_cursorposfun(GLFWwindow* window, double xpos, double ypos)
 {
-  g_visualization->mouseMove(xpos, ypos);
+  overview_renderer->mouseMove(xpos, ypos);
 }
 
 
@@ -145,7 +145,7 @@ void main_window_keyfun(GLFWwindow* window, int key, int scancode, int action, i
   // recognize press of escape key and close application
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
   {
-    delete g_visualization;
+    delete overview_renderer;
 
     glfwSetWindowShouldClose(window, GL_TRUE);
     return;
@@ -153,9 +153,9 @@ void main_window_keyfun(GLFWwindow* window, int key, int scancode, int action, i
 
   // default key function
   if (action == GLFW_PRESS)
-    g_visualization->keyPress(key, mods);
+    overview_renderer->keyPress(key, mods);
   else // GLFW_RELEASE
-    g_visualization->keyRelease(key, mods);
+    overview_renderer->keyRelease(key, mods);
 }
 
 
@@ -180,7 +180,7 @@ void glfw_errorfun(int error, const char* description)
 int main(int argc, char *argv[])
 {
   // Graph init
-  graph = new vta::Graph();
+  graph = new vta::Visualization();
 
   //TODO create DB from tsv files
 
@@ -193,9 +193,9 @@ int main(int argc, char *argv[])
       exit(1);
 
   // new cluster visualization instance
-  cluster_visualization = new vta::ClusterVis(graph);
+  detail_renderer = new vta::DetailRenderer(graph);
 
-  if (!cluster_visualization->initialize())
+  if (!detail_renderer->initialize())
   {
     std::cerr << "error initializing cluster vis" << std::endl;
     exit(EXIT_FAILURE);
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 
   glfwGetFramebufferSize(cluster_window, &cluster_window_width, &cluster_window_height);
 
-  cluster_visualization->resize(cluster_window_width, cluster_window_height); // initial resize
+  detail_renderer->resize(cluster_window_width, cluster_window_height); // initial resize
 
   // GLFW main window init
   GLFWwindow* main_window = glfwCreateWindow(1920, 1080, "VisualTextAnalytics", NULL, NULL);
@@ -238,9 +238,9 @@ int main(int argc, char *argv[])
   glfwSetScrollCallback(main_window, main_window_scrollfun);
 
   // new visualization instance
-  g_visualization = new vta::Visualization(graph);
+  overview_renderer = new vta::OverviewRenderer(graph);
 
-  if (!g_visualization->initialize())
+  if (!overview_renderer->initialize())
   {
     std::cerr << "error initializing main vis" << std::endl;
     exit(EXIT_FAILURE);
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
 
   glfwGetFramebufferSize(main_window, &main_window_width, &main_window_height);
 
-  g_visualization->resize(main_window_width, main_window_height); // initial resize
+  overview_renderer->resize(main_window_width, main_window_height); // initial resize
 
   if (GLEW_OK != glewInit())
 	{
@@ -317,10 +317,10 @@ int main(int argc, char *argv[])
 
       if (ImGui::Button("add"))
       {
-        g_visualization->add_to_blacklist(std::string (buf));
+        overview_renderer->add_to_blacklist(std::string (buf));
       }
 
-      std::vector<std::string> current_blacklist = g_visualization->get_blacklist();
+      std::vector<std::string> current_blacklist = overview_renderer->get_blacklist();
       for (unsigned i = 0; i != current_blacklist.size(); ++i)
       {
         std::string title = current_blacklist[i];
@@ -334,8 +334,8 @@ int main(int argc, char *argv[])
       ImGui::End();
     }
 
-    g_visualization->set_minimum_similarity(min_similarity);
-    g_visualization->set_maximum_similarity(max_similarity);
+    overview_renderer->set_minimum_similarity(min_similarity);
+    overview_renderer->set_maximum_similarity(max_similarity);
 
     // Rendering
     glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
