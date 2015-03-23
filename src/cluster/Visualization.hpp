@@ -4,6 +4,7 @@
 // vta
 #include <cluster/Edge.hpp>
 #include <cluster/Cluster.hpp>
+#include <categorytree/CategoryTree.hpp>
 
 // cpp
 #include <vector>
@@ -42,6 +43,7 @@ namespace vta
 {
 
   class Cluster;
+  class CategoryTree;
 
 
   class Visualization
@@ -71,6 +73,8 @@ namespace vta
 
       // Create Visualization from data base
       void create_graph_from_db(const char input_file_name[], const char offset_file_name[]); // replace durch get cluster
+      void visit_article(Article, Cluster*);
+      void get_next_cluster();
 
       // Get cluster size
       double get_cluster_size() const; // Allgemeine Cluster size
@@ -80,34 +84,40 @@ namespace vta
       // Index of Cluster that will be displayed in the detail view
       unsigned _detail_view_cluster_index; // wichtig fuer Cluster window
 
-      // Cluster algorithms
-      void visit_node(Node*, Cluster*); /// delete
-      void search_clusters(); /// delete
-
       // Set all cluster position
       void set_cluster_positions();
 
       // Return the category tree
-      Cluster* get_category_tree() const;
+      CategoryTree* get_category_tree() const;
+
+      // Build category tree for a specific article
+      void build_category_tree(Cluster*);
 
     private:
       std::vector<Node*> _nodes; /// delete
       std::vector<Edge*> _edges; /// delete
 
-      std::map<uint32_t,Node*> _index2node; /// delete
+      std::map<uint32_t,Node*> _index2node;
+      std::map<uint32_t,Node*> _categoryIndex2node;
 
       // Clustering
       std::vector<Cluster*> _clusters;
 
       // Category tree
-      Cluster* _category_tree;
+      CategoryTree* _category_tree;
 
       // Amount of clusters per row
       unsigned _clusters_per_row;
       double _cluster_size;
 
-      //
-      bool node_map_contains_id(int); /// delete
+      // wikidb
+      uint32_t _article_index;
+      WikiDB _wikidb;
+
+      // to check if nodes allready exist
+      bool node_map_contains_id(int);
+      bool cat_map_contains_id(int);
+
 
   };
 

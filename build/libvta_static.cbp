@@ -87,6 +87,8 @@
 		<Unit filename="../shaders/node.fs" />
 		<Unit filename="../shaders/node.gs" />
 		<Unit filename="../shaders/node.vs" />
+		<Unit filename="../src/categorytree/CategoryTree.cpp" />
+		<Unit filename="../src/categorytree/CategoryTree.hpp" />
 		<Unit filename="../src/cluster/Cluster.cpp" />
 		<Unit filename="../src/cluster/Cluster.hpp" />
 		<Unit filename="../src/cluster/Edge.cpp" />

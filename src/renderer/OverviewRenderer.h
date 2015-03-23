@@ -59,11 +59,14 @@ class OverviewRenderer
     // display loop
     void display();
 
+    // Display node labels of detailed cluster
+    void display_node_labels();
+
     // resize window
     void resize(int width, int height);
 
     // Get Cluster index from mouse position
-    unsigned get_cluster_index_from_mouse_pos(gloost::Vector3&);
+    unsigned get_cluster_index_from_mouse_pos(gloost::Vector3);
 
     // mouse input
     void mousePress(int x, int y, int btn, int mods);
@@ -84,6 +87,9 @@ class OverviewRenderer
     void add_to_blacklist(std::string const);
     bool blacklist_constains(std::string const);
     std::vector<std::string> get_blacklist();
+
+    // Display next cluster
+    void get_next_cluster(unsigned);
 
 
   protected:
@@ -135,6 +141,9 @@ class OverviewRenderer
 
     // Number of clusters on screen
     unsigned _num_clusters_on_screen;
+
+    // Toggle if a cluster is currently at detail view
+    bool _cluster_detail_view;
 
 };
 

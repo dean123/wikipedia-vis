@@ -170,13 +170,13 @@ void detail_window_cursorposfun(GLFWwindow* window, double xpos, double ypos)
 void main_window_keyfun(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
   // recognize press of escape key and close application
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-  {
-    delete overview_renderer;
-
-    glfwSetWindowShouldClose(window, GL_TRUE);
-    return;
-  }
+//  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+//  {
+//    delete overview_renderer;
+//
+//    glfwSetWindowShouldClose(window, GL_TRUE);
+//    return;
+//  }
 
   // default key function
   if (action == GLFW_PRESS)
@@ -211,7 +211,9 @@ int main(int argc, char *argv[])
 
   //TODO create DB from tsv files
 
-  graph->create_graph_from_db("/media/HDD/RAM_CORPUS/SUBSETS/subset_sim_900_999.dat", "/media/HDD/RAM_CORPUS/SUBSETS/offset_subset_sim_900_999.dat");
+//  graph->create_graph_from_db("/media/HDD/RAM_CORPUS/SUBSETS/subset_sim_900_999.dat", "/media/HDD/RAM_CORPUS/SUBSETS/offset_subset_sim_900_999.dat");
+
+  graph->get_next_cluster();
 
   // GLFW
   glfwSetErrorCallback(glfw_errorfun);
@@ -306,6 +308,9 @@ int main(int argc, char *argv[])
 
   // Blacklist
   char* buf = new char [256];
+  int* num_of_clusters = new int(1);
+
+  overview_renderer->get_next_cluster(20);
 
   // Main loop
   while (!glfwWindowShouldClose(imgui_window))
@@ -359,6 +364,17 @@ int main(int argc, char *argv[])
 //        delete [] cstr;
       }
 
+      ImGui::End();
+    }
+
+    {
+      ImGui::Begin("Cluster");
+      ImGui::InputInt("Number of Clusters", num_of_clusters, 1, 2);
+
+      if (ImGui::Button("get next cluster"))
+      {
+        overview_renderer->get_next_cluster(*num_of_clusters);
+      }
       ImGui::End();
     }
 

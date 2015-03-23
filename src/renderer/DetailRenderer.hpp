@@ -78,9 +78,8 @@ namespace vta
       gloost::MatrixStack _modelMatrixStack;
 
       // Panning and Zooming
-      gloost::Matrix _translateMatrix;
-      gloost::Matrix _scaleMatrix;
-      gloost::Matrix _panning_zooming_mat;
+      gloost::Vector3 _translateVector;
+      gloost::Vector3 _scaleVector;
 
       // data
       Visualization* _graph;

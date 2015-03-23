@@ -21,14 +21,18 @@ Visualization::Visualization()
   _edges(),
 
   _index2node(),
+  _categoryIndex2node(),
 
   _clusters(),
   _category_tree(),
 
   _clusters_per_row(20),
-  _cluster_size(0)
+  _cluster_size(0),
+
+  _article_index(1),
+  _wikidb("/media/HDD/wikipedia-db/pages")
 {
-  _category_tree = new Cluster();
+  _category_tree = new CategoryTree();
 }
 
 
@@ -186,120 +190,106 @@ Visualization::node_map_contains_id(int id)
   return false;
 }
 
+bool
+Visualization::cat_map_contains_id(int id)
+{
+  std::map<uint32_t,Node*>::iterator it = _categoryIndex2node.find(id);
 
-// Compare two clusters according to their size
-bool cluster_compare_func (Cluster* i, Cluster* j) { return (i->get_node_num() > j->get_node_num()); }
+  if(it != _categoryIndex2node.end())
+  {
+   return true;
+  }
+  return false;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-  \brief   Reads complete binary file and creates nodes and edges
-  \remarks node --> article
-  \remarks edge --> comparison
+  \brief   Clusters through data base and returns first found cluster
+  \remarks
 */
 
+
 void
-Visualization::create_graph_from_db(const char g_bin_data_filename[], const char offset_file_name[])
+Visualization::visit_article(Article article, Cluster* current_cluster)
 {
-    std::cout << "in create_Visualization_from_db`" << std::endl;
-    WikiDB wikidb("/media/HDD/testdb/pages");
-    std::vector<uint32_t> articleVec = wikidb.getArticles();
-    std::vector<uint32_t> categoryVec = wikidb.getCategories();
+  if(!node_map_contains_id(article.index))
+  {
+    _index2node[article.index] = create_node(article.index,article.title, article);
+    current_cluster->add_node(_index2node[article.index]);
+  }
 
-    std::cout << "article vec size " << articleVec.size() << std::endl;
-    std::cout << "category vec size " << categoryVec.size() << std::endl;
+  std::vector<SimPair> comparisons = article.getComparisons();
 
-    Article article = wikidb.getArticle(1);
+  for(unsigned k = 0; k < comparisons.size(); ++k)
+  {
+    if (k == 100)
+      break;
 
-    for (auto k : categoryVec)
+    SimPair current_sim_pair = comparisons[k];
+
+    uint32_t index = current_sim_pair.getIndex();
+
+    Article article2 = _wikidb.getArticle(index);
+
+    if (!node_map_contains_id(index))
     {
-      Category category = wikidb.getCategory(k);
-
-      if(!node_map_contains_id(k))
-      {
-        _index2node[k] = create_node(k,category.title, article);
-        _category_tree->add_node(_index2node[k]);
-      }
-
-      std::vector<uint32_t> parents = category.getParents();
-
-      for(unsigned j = 0; j < parents.size(); ++j)
-      {
-        uint32_t index = parents[j];
-
-        Category parent = wikidb.getCategory(index);
-        if (!node_map_contains_id(index))
-        {
-          _index2node[index] = create_node(index, parent.title, article);
-          _category_tree->add_node(_index2node[index]);
-        }
-
-
-        _category_tree->add_edge(create_edge(_index2node[k], _index2node[index], 0.9));
-      }
+      _index2node[index] = create_node(index, article2.title, article2);
+      current_cluster->add_node(_index2node[index]);
     }
 
-    _index2node.clear();
+    uint32_t sim = current_sim_pair.getSim();
 
-    // All cluster have the size and radius of the biggest cluster
-    double width_height = 5000.0 * sqrt(_category_tree->get_node_num());
-    double radius = 5000.0 * _category_tree->get_node_num() + width_height;
+    double similarity = sim;
+    similarity = similarity / 1000;
 
-    _category_tree->set_position(radius/2 + radius/4, radius/2 + radius/4);
+    Edge* new_edge = create_edge(_index2node[article.index], _index2node[index], similarity);
+    current_cluster->add_edge(new_edge);
 
-    _category_tree->set_radius(radius);
-//    _category_tree->make_radial_layout();
-    _category_tree->make_category_tree_layout();
+    new_edge->_color[0] = 0.0f;
+    new_edge->_color[1] = 0.0f;
+    new_edge->_color[2] = similarity;
 
-    std::cout << "Created category tree with " << _category_tree->get_node_num() << " nodes." << std::endl;
-
-
-
-//    for (auto i : articleVec) {
-//      Article article = wikidb.getArticle(i);
-//      std::vector<SimPair> compVector = article.getComparisons();
-//
-//      if(!node_map_contains_id(i))
-//        _index2node[article.index] = create_node(article.index,article.title, article);
-//
-//
-//      for(unsigned k = 0; k < compVector.size(); ++k)
-//      {
-//        if (k == 100)
-//          break;
-//
-//        SimPair current_sim_pair = compVector[k];
-//
-//        uint32_t index = current_sim_pair.getIndex();
-//
-//        Article article2 = wikidb.getArticle(index);
-//
-//        if (!node_map_contains_id(index))
-//          _index2node[index] = create_node(index, article2.title, article2);
-//
-//        uint32_t sim = current_sim_pair.getSim();
-//
-//        double similarity = sim;
-//        similarity = similarity / 1000;
-//
-//        Edge* new_edge = create_edge(_index2node[article.index], _index2node[index], similarity);
-//
-//        new_edge->_color[0] = 0.0f;
-//        new_edge->_color[1] = 0.0f;
-//        new_edge->_color[2] = similarity;
-//      }
-//    }
-//
-//      search_clusters();
-//      std::sort (_clusters.begin(), _clusters.end(), cluster_compare_func);
-//
-//      set_cluster_positions();
-//
-//      _index2node.clear();
-
-      std::cout << "created from db" << std::endl;
+    if (!_index2node[index]->_visited)
+    {
+      _index2node[index]->_visited = true;
+      visit_article(article2, current_cluster);
+    }
   }
+}
+
+
+
+void
+Visualization::get_next_cluster()
+{
+  Cluster* current_cluster = new Cluster();
+
+  Article article = _wikidb.getArticle(_article_index);
+
+  if(!node_map_contains_id(article.index))
+  {
+    _index2node[article.index] = create_node(article.index,article.title, article);
+    current_cluster->add_node(_index2node[article.index]);
+  }
+
+  if (!_index2node[article.index]->_visited)
+  {
+    _index2node[article.index]->_visited = true;
+    visit_article(article, current_cluster);
+  }
+
+  current_cluster->set_radius(2000.0);
+  current_cluster->set_position(_article_index * 200.0, 0.0);
+  current_cluster->make_radial_layout();
+
+  _clusters.push_back(current_cluster);
+
+  std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
+
+  _article_index++;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -333,74 +323,13 @@ Visualization::get_clusters_per_row_num() const
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-  \brief   Visit the node and recursive visit all adjacent nodes that have not been visited yet
-  \remarks Auskommentiert ist die Möglichkeit ein Cluster nur über einem bestimmten similarity threshold zu bilden
-*/
-
-void
-Visualization::visit_node(Node* v1, Cluster* current_cluster)
-{
-  if(!v1->_visited)
-  {
-    v1->_visited = true;
-    current_cluster->add_node(v1);
-
-    for (unsigned i = 0; i != v1->incomingEdges.size(); i++)
-    {
-      Edge* current_edge = v1->incomingEdges[i];
-
-      current_cluster->add_edge(current_edge);
-
-      if (current_edge->getWeight() >= 0.63)
-        visit_node(current_edge->getSource(), current_cluster);
-    }
-
-    for (unsigned i = 0; i != v1->outgoingEdges.size(); i++)
-    {
-      Edge* current_edge = v1->outgoingEdges[i];
-
-      if (current_edge->getWeight() >= 0.63)
-        visit_node(current_edge->getTarget(), current_cluster);
-    }
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
-  \brief   Search for clusers and store them in the vector _clusters
-  \remarks
-*/
-
-void
-Visualization::search_clusters()
-{
-  std::cout << "Searching for clusters..." << std::endl;
-
-  for (unsigned i = 0; i != _nodes.size(); i++)
-  {
-    Node* source = _nodes[i];
-
-    Cluster* current_cluster = new Cluster();
-
-    visit_node(source, current_cluster);
-
-    if(current_cluster->get_node_num() != 0)
-      _clusters.push_back(current_cluster);
-
-  }
-
-  std::cout << "Finished searching for clusters" << std::endl;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
   \brief   Set all cluster positions according to the radius of the biggest cluster
   \remarks
 */
+
+// Compare two clusters according to their size
+bool cluster_compare_func (Cluster* i, Cluster* j) { return (i->get_node_num() > j->get_node_num()); }
+
 
 void
 Visualization::set_cluster_positions()
@@ -448,10 +377,63 @@ Visualization::set_cluster_positions()
   \remarks
 */
 
-Cluster*
+CategoryTree*
 Visualization::get_category_tree() const
 {
   return _category_tree;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Build category tree for a specific article
+  \remarks
+*/
+
+void
+Visualization::build_category_tree(Cluster* cluster)
+{
+  std::cout << "Build category tree for " << cluster->get_node_num() << " nodes." << std::endl;
+  _category_tree->clear();
+
+  // Get all parents of all articles in this cluster
+  for (unsigned i_node = 0; i_node != cluster->get_node_num(); ++i_node)
+  {
+    Article article = cluster->get_node(i_node)->_article;
+
+    std::vector<uint32_t> parents = article.getParents();
+
+    for (unsigned i = 0; i != parents.size(); ++i)
+    {
+      Category parent = _wikidb.getCategory(parents[i]);
+
+      if(!cat_map_contains_id(parent.index))
+      {
+        _categoryIndex2node[parent.index] = create_node(parent.index,parent.title, article);
+        _category_tree->add_node(_categoryIndex2node[parent.index]);
+      }
+
+      std::vector<uint32_t> parent_parents = parent.getParents();
+
+      for (unsigned j = 0; j != parent_parents.size(); ++j)
+      {
+        Category parent_parent = _wikidb.getCategory(parent_parents[j]);
+
+        if(!cat_map_contains_id(parent_parent.index))
+        {
+          _categoryIndex2node[parent_parent.index] = create_node(parent_parent.index,parent_parent.title, article);
+          _category_tree->add_node(_categoryIndex2node[parent_parent.index]);
+        }
+
+        Edge* new_edge = create_edge(_categoryIndex2node[parent_parent.index],
+                                     _categoryIndex2node[parent.index], 0.9);
+        _category_tree->add_edge(new_edge);
+      }
+    }
+  }
+
+  _category_tree->make_category_tree_layout();
 }
 
 

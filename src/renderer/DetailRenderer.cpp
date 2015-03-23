@@ -43,9 +43,8 @@ DetailRenderer::DetailRenderer(Visualization* graph):
   _viewMatrix(),
   _modelMatrixStack(),
 
-  _translateMatrix(),
-  _scaleMatrix(),
-  _panning_zooming_mat(),
+  _translateVector(0.0, 0.0, 0.0),
+  _scaleVector(1.0, 1.0, 1.0),
 
   _graph(graph),
 
@@ -64,10 +63,6 @@ DetailRenderer::DetailRenderer(Visualization* graph):
   _viewMatrix.setIdentity();
   _modelMatrixStack.clear();
 
-  _translateMatrix.setIdentity();
-  _scaleMatrix.setIdentity();
-  _panning_zooming_mat.setIdentity();
-
   gloost::gl::gloostOrtho(_projectionMatrix,
                           0.0, _width,
                           0.0, _height,
@@ -79,8 +74,6 @@ DetailRenderer::DetailRenderer(Visualization* graph):
                            gloost::Vector3(0.0, 0.0, 0.0),   // look at
                            gloost::Vector3(0.0, 1.0, 0.0));  // up
 
-
-  panningZooming(0.0001);
 
   _uniformSet.set_mat4("Projection", gloost::mat4(_projectionMatrix));
   _uniformSet.set_mat4("View", gloost::mat4(_viewMatrix));
@@ -138,12 +131,12 @@ DetailRenderer::initialize()
 void
 DetailRenderer::fill_vbo_nodes()
 {
-  Cluster* category_tree = _graph->get_category_tree();
+  CategoryTree* category_tree = _graph->get_category_tree();
 
   // init nodes
   int numNodes = category_tree->get_node_num();
 
- auto interleavedAttributes = gloost::InterleavedAttributes::create();
+  auto interleavedAttributes = gloost::InterleavedAttributes::create();
 
   unsigned containerSize = numNodes * 5; // vec2(position) + vec3(color)
   std::vector<float>& container = interleavedAttributes->getVector();
@@ -180,7 +173,7 @@ DetailRenderer::fill_vbo_nodes()
 void
 DetailRenderer::fill_vbo_edges()
 {
-  Cluster* category_tree = _graph->get_category_tree();
+  CategoryTree* category_tree = _graph->get_category_tree();
 
   int numEdges = category_tree->get_edge_num();
 
@@ -231,7 +224,10 @@ DetailRenderer::fill_vbo_edges()
 void
 DetailRenderer::display()
 {
-  Cluster* category_tree = _graph->get_category_tree();
+  CategoryTree* category_tree = _graph->get_category_tree();
+
+  fill_vbo_nodes();
+  fill_vbo_edges();
 
   // setup clear color and clear screen
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -247,11 +243,11 @@ DetailRenderer::display()
   _modelMatrixStack.clear();
   _modelMatrixStack.push();
   {
-//    _modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
-//    _modelMatrixStack.scale(_scaleVector);
+    _modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
+    _modelMatrixStack.scale(_scaleVector);
 
     // set current model view matrix
-    _uniformSet.set_mat4("Model", _panning_zooming_mat);
+    _uniformSet.set_mat4("Model", _modelMatrixStack.top());
 
     _edgeShader->use();
     {
@@ -275,66 +271,56 @@ DetailRenderer::display()
     _nodeShader->disable();
   }
   _modelMatrixStack.pop();
-//
+
 //
 //  // LABEL NODES
-//  for (unsigned i = 0; i != cluster->get_node_num(); ++i)
+//  for (unsigned i = 0; i != category_tree->get_node_num(); ++i)
 //  {
-//    Node* current_node = cluster->get_node(i);
-//
-//    gloost::Vector3 text_position(current_node->_x, current_node->_y, 0.0);
-//
-//    // Scale Cluster to window size
-//    gloost::Matrix model_matrix;
-//    float scale = _height/(cluster->get_radius() * 2);
-//
-//    model_matrix.setScale(gloost::Vector3(scale, scale,0.0));
-//
-//    text_position = model_matrix * text_position;
-//
-//    // Translate from original cluster position to 0,0
-//    text_position[0] -= cluster->get_position_x() * scale;
-//    text_position[1] -= cluster->get_position_y() * scale;
-//
-//    // translate to the middle of the screen
-//    text_position[0] += _width/2;
-//    text_position[1] += _height/2;
-//
-//    std::string label = current_node->_label;
-//
-//    // draw text
-//    glPushMatrix();
-//    glPushAttrib(GL_ALL_ATTRIB_BITS);
+//    if (i % 30 == 29)
 //    {
-//      glDisable(GL_DEPTH_TEST);
-//      glDepthMask(GL_FALSE);
-//      glEnable(GL_TEXTURE_2D);
 //
-//      glMatrixMode(GL_PROJECTION);
-//      gloostLoadMatrix(_projectionMatrix.data());
+//      Node* current_node = category_tree->get_node(i);
 //
-//      glMatrixMode(GL_MODELVIEW);
-//      gloostLoadMatrix(_viewMatrix.data());
+//      gloost::Vector3 text_position(current_node->_x, current_node->_y, 0.0);
 //
-//      /// _typewriter functions
-//      /*
-//      // cuts a line, so it is not longer as maxPixelLength with the current font
-//      std::string cutLineToLength(const std::string& text, unsigned maxPixelLength) const;
-//
-//      // sets the scaling
-//      void setScale(float scale);
-//      */
-//
-//      _typeWriter->beginText();
-//      _typeWriter->setScale(2.0);
+//      _modelMatrixStack.clear();
+//      _modelMatrixStack.push();
 //      {
-//        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-//        _typeWriter->writeLine(text_position[0], text_position[1], label);
+//        _modelMatrixStack.scale(_scaleVector);
+//
+//         text_position = text_position + _translateVector;
+//         text_position = _modelMatrixStack.top() * text_position;
 //      }
-//      _typeWriter->endText();
+//
+//      _modelMatrixStack.pop();
+//
+//      std::string label = current_node->_label;
+//
+//      // draw text
+//      glPushMatrix();
+//      glPushAttrib(GL_ALL_ATTRIB_BITS);
+//      {
+//        glDisable(GL_DEPTH_TEST);
+//        glDepthMask(GL_FALSE);
+//        glEnable(GL_TEXTURE_2D);
+//
+//        glMatrixMode(GL_PROJECTION);
+//        gloostLoadMatrix(_projectionMatrix.data());
+//
+//        glMatrixMode(GL_MODELVIEW);
+//        gloostLoadMatrix(_viewMatrix.data());
+//
+//        _typeWriter->beginText();
+//        _typeWriter->setScale(2.0);
+//        {
+//          glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+//          _typeWriter->writeLine(text_position[0], text_position[1], label);
+//        }
+//        _typeWriter->endText();
+//      }
+//      glPopAttrib();
+//      glPopMatrix();
 //    }
-//    glPopAttrib();
-//    glPopMatrix();
 //  }
 }
 
@@ -416,37 +402,12 @@ DetailRenderer::mouseMove(int x, int y)
   _mouseState.setPosition((float)x, (float)(_height - y));
 
   /// Panning
-  gloost::Matrix old_trans_matrix = _translateMatrix;
-
   if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
   {
     gloost::Vector3 mouse_drag = _mouseState.getSpeed();
 
-    gloost::Vector3 scale_vector = _scaleMatrix.getScale();
-
-    _translateMatrix.setTranslate(mouse_drag[0] / (scale_vector[0] * 2000.0),
-                                  mouse_drag[1] / (scale_vector[1] * 2000.0),
-                                  0.0);
-
-    _translateMatrix = old_trans_matrix * _translateMatrix;
-
-    panningZooming(1.0);
+    _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void
-DetailRenderer::panningZooming(float scale)
-{
-  gloost::Matrix new_scale_mat;
-
-  new_scale_mat.setIdentity();
-  new_scale_mat.setScale(scale);
-
-  _scaleMatrix = _scaleMatrix * new_scale_mat;
-
-  _panning_zooming_mat = _scaleMatrix * _translateMatrix;
 }
 
 
@@ -462,14 +423,16 @@ void
 DetailRenderer::mouseScrollEnhance()
 {
   // Zoom in
-  panningZooming(1.1);
+  _scaleVector[0] = _scaleVector[0] * 1.1;
+  _scaleVector[1] = _scaleVector[1] * 1.1;
 }
 
 void
 DetailRenderer::mouseScrollDecrease()
 {
   // Zoom out
-  panningZooming(0.8);
+  _scaleVector[0] = _scaleVector[0] * 0.8;
+  _scaleVector[1] = _scaleVector[1] * 0.8;
 }
 
 
