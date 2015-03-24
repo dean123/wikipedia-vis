@@ -57,7 +57,9 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _translateVector(0.0, 0.0, 0.0),
   _scaleVector(0.005, 0.005, 1.0),
 
-  _transformToScreen(),
+  _mouse_pos(0.0, 0.0, 0.0),
+
+  _zoomingPanningStack(),
 
   _graph(graph),
 
@@ -89,8 +91,6 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _projectionMatrix.setIdentity();
   _viewMatrix.setIdentity();
   _modelMatrixStack.clear();
-
-  _transformToScreen.setIdentity();
 
   gloost::gl::gloostOrtho(_projectionMatrix,
                           0.0, _width,
@@ -418,14 +418,13 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
       double cluster_y = detail_cluster->get_position_y();
       _modelMatrixStack.translate(-cluster_x, -cluster_y, 0.0);
 
-//      _transformToScreen = _modelMatrixStack.top();
-
       // set current model view matrix
       _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top()));
     }
     else
     {
-      _modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
+      //_modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
+//      _modelMatrixStack.translate(_mouse_pos);
       _modelMatrixStack.scale(_scaleVector);
 
       _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top())); // set current model view matrix
@@ -704,36 +703,36 @@ OverviewRenderer::mousePress(int x, int y, int btn, int mods)
       Cluster* detail_cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
 
       gloost::Matrix model_matrix;
+
+      auto matrixStack = gloost::MatrixStack();
+
+      // Translate Cluster to the middle of the window
+      matrixStack.translate(_width/2, _height/2, 0.0);
+
+      // Scale Cluster to window size
       float scale = _height/(detail_cluster->get_radius() * 2);
+      matrixStack.scale(scale, scale, 1.0);
 
-      // translate to the middle of the screen
-      mouse_position[0] -= _width/2;
-      mouse_position[1] -= _height/2;
+      // Translate cluster to the window
+      double cluster_x = detail_cluster->get_position_x();
+      double cluster_y = detail_cluster->get_position_y();
+      matrixStack.translate(-cluster_x, -cluster_y, 0.0);
 
-      // Translate from original cluster position to 0,0
-      mouse_position[0] += detail_cluster->get_position_x() * 1/scale;
-      mouse_position[1] += detail_cluster->get_position_y() * 1/scale;
-
-      model_matrix.setScale(gloost::Vector3(1/scale, 1/scale,0.0));
-
-      mouse_position = model_matrix.inverted() * mouse_position;
-
-
-      double node_size = 10000.0;
-
-      std::cout << "Mouse pos: " << mouse_position[0] << "   " << mouse_position[1] << std::endl;
+      double node_size = 40.0;
 
       for (unsigned i = 0; i != detail_cluster->get_node_num(); ++i)
       {
         Node* current_node = detail_cluster->get_node(i);
-        if (i == 0)
-          std::cout << "Node pos: " << current_node->_x << "   " << current_node->_y << std::endl;
+
+        auto node_pos = gloost::Point3(current_node->_x, current_node->_y, 0.0);
+
+        node_pos = matrixStack.top() * node_pos;
 
         // Check if mouse is over this node
-        if (mouse_position[0] >= current_node->_x - node_size && mouse_position[0] <= current_node->_x + node_size &&
-            mouse_position[1] >= current_node->_y - node_size && mouse_position[1] <= current_node->_y + node_size)
+        if (mouse_position[0] >= node_pos[0] - node_size && mouse_position[0] <= node_pos[0] + node_size &&
+            mouse_position[1] >= node_pos[1] - node_size && mouse_position[1] <= node_pos[1] + node_size)
             {
-              current_node->_label;
+              std::cout << current_node->_label << std::endl;
             }
       }
 
@@ -797,50 +796,17 @@ OverviewRenderer::mouseMove(int x, int y)
   {
     if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
     {
-      gloost::Vector3 mouse_drag = _mouseState.getSpeed();
+      //gloost::Vector3 mouse_drag = _mouseState.getSpeed();
 
-      _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
+
+
+      //_translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
+
+      _translateVector += _mouseState.getPosition() - _mouseState.getLastMouseDownPosition();
+
+//      int imgx = (int)(startx + (deltaX / zoom));
+//      int imgy = (int)(starty + (deltaY / zoom));
     }
-  }
-  else
-  {
-      Cluster* detail_cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
-
-      double node_size = 10000.0;
-//
-//      float scale = _height/(detail_cluster->get_radius() * 2);
-//
-//      // Translate from original cluster position to 0,0
-//      mouse_position[0] += detail_cluster->get_position_x();
-//      mouse_position[1] += detail_cluster->get_position_y();
-//
-//      // translate to the middle of the screen
-//      mouse_position[0] -= _width/2;
-//      mouse_position[1] -= _height/2;
-//
-//      gloost::Matrix model_matrix;
-//
-//      model_matrix.setScale(gloost::Vector3(scale, scale,0.0));
-//
-//      mouse_position = model_matrix.inverted() * mouse_position;
-
-      mouse_position = _transformToScreen.inverted() * mouse_position;
-
-//      std::cout << "Mouse pos: " << mouse_position[0] << "   " << mouse_position[1] << std::endl;
-
-      for (unsigned i = 0; i != detail_cluster->get_node_num(); ++i)
-      {
-        Node* current_node = detail_cluster->get_node(i);
-//        if (i == 0)
-//          std::cout << "Node pos: " << current_node->_x << "   " << current_node->_y << std::endl;
-
-        // Check if mouse is over this node
-        if (mouse_position[0] >= current_node->_x - node_size && mouse_position[0] <= current_node->_x + node_size &&
-            mouse_position[1] >= current_node->_y - node_size && mouse_position[1] <= current_node->_y + node_size)
-            {
-              current_node->_label;
-            }
-      }
   }
 
 
@@ -914,6 +880,8 @@ OverviewRenderer::mouseScrollEnhance()
     // Zoom in
     _scaleVector[0] = _scaleVector[0] * 1.1;
     _scaleVector[1] = _scaleVector[1] * 1.1;
+
+    _mouse_pos = _mouseState.getPosition();
   }
 }
 
@@ -925,6 +893,8 @@ OverviewRenderer::mouseScrollDecrease()
     // Zoom out
     _scaleVector[0] = _scaleVector[0] * 0.8;
     _scaleVector[1] = _scaleVector[1] * 0.8;
+
+    _mouse_pos = _mouseState.getPosition();
   }
 }
 

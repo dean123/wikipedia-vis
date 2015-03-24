@@ -416,6 +416,8 @@ Visualization::build_category_tree(Cluster* cluster)
 {
   std::cout << "Build category tree for " << cluster->get_node_num() << " nodes." << std::endl;
 
+  std::vector<uint32_t> indirect_parents;
+
   // Get all parents of all articles in this cluster
   for (unsigned i_node = 0; i_node != cluster->get_node_num(); ++i_node)
   {
@@ -449,6 +451,28 @@ Visualization::build_category_tree(Cluster* cluster)
                                        _index2categoryNode[parent.index], 0.9);
           _category_tree->add_edge(new_edge);
         }
+//        else
+//        {
+//          // in category vector pushen und checken ob es den schon gibt
+//          bool indirect_parents_contains = false;
+//
+//          for (unsigned k = 0; k != indirect_parents.size(); ++k)
+//          {
+//            if(indirect_parents[k] == parent_parents[j])
+//            {
+//              indirect_parents_contains == true;
+//              break;
+//            }
+//
+//            if (indirect_parents_contains)
+//            {
+//              // Zwei haben gemeinsamen Parent
+//              _index2categoryNode[indirect_parents[k]] = create_category_node(parent.index,parent.title, parent);
+//              _category_tree->add_node(_index2categoryNode[parent.index]);
+//            }
+//          }
+//
+//        }
       }
     }
   }

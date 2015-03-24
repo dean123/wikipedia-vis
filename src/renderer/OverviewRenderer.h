@@ -109,9 +109,11 @@ class OverviewRenderer
     // Panning and Zooming
     gloost::Vector3 _translateVector;
     gloost::Vector3 _scaleVector;
+    // Mouse Position for scaling
+    gloost::Point3 _mouse_pos;
 
     // Transformation Matrix for detail view
-    gloost::Matrix _transformToScreen;
+    gloost::MatrixStack _zoomingPanningStack;
 
     // data
     Visualization* _graph;
