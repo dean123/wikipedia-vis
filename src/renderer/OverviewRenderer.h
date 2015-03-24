@@ -110,6 +110,9 @@ class OverviewRenderer
     gloost::Vector3 _translateVector;
     gloost::Vector3 _scaleVector;
 
+    // Transformation Matrix for detail view
+    gloost::Matrix _transformToScreen;
+
     // data
     Visualization* _graph;
 

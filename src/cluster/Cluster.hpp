@@ -14,11 +14,11 @@ namespace vta
       ~Cluster();
 
       // Add node to Cluster
-      void add_node(Node*);
+      void add_node(ArticleNode*);
       void add_edge(Edge*);
 
       // Get node with index
-      Node* get_node(unsigned);
+      ArticleNode* get_node(unsigned);
       Edge* get_edge(unsigned);
 
       // Get Number of nodes and edges
@@ -49,7 +49,7 @@ namespace vta
 
     private:
       // Nodes and edges of cluster
-      std::vector<Node*> _nodes;
+      std::vector<ArticleNode*> _nodes;
       std::vector<Edge*> _edges;
       // Cluster position
       double _position_x;
@@ -58,9 +58,9 @@ namespace vta
       double _radius;
 
       // Radial layout weight functions
-      double get_max_edge_weight(Node*);
-      double get_min_edge_weight(Node*);
-      double get_average_edge_weight(Node*);
+      double get_max_edge_weight(ArticleNode*);
+      double get_min_edge_weight(ArticleNode*);
+      double get_average_edge_weight(ArticleNode*);
   };
 
 

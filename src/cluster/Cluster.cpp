@@ -15,7 +15,7 @@ Cluster::~Cluster()
 
 
 void
-Cluster::add_node(Node* node)
+Cluster::add_node(ArticleNode* node)
 {
   _nodes.push_back(node);
 }
@@ -27,7 +27,7 @@ Cluster::add_edge(Edge* edge)
 }
 
 
-Node*
+ArticleNode*
 Cluster::get_node(unsigned index)
 {
   return _nodes[index];
@@ -110,7 +110,7 @@ Cluster::make_radial_layout()
 
   for (unsigned i_node = 0; i_node != node_num; ++i_node)
   {
-    Node* current_node = _nodes[i_node];
+    ArticleNode* current_node = _nodes[i_node];
 
     current_node->_x = (cos(angle * i_node) * _radius) + _position_x;
     current_node->_y = (sin(angle * i_node) * _radius) + _position_y;
@@ -139,8 +139,8 @@ Cluster::make_ring_layout()
   double radius_step = _radius / number_of_rings;
 
   // Fill inner and outer ring
-  std::vector<Node*> inner_ring;
-  std::vector<Node*> outer_rings;
+  std::vector<ArticleNode*> inner_ring;
+  std::vector<ArticleNode*> outer_rings;
 
   // Fill according to sum of node weights of cluster and inner ring
   unsigned cluster_node_weight_sum = get_node_weight_sum();
@@ -148,7 +148,7 @@ Cluster::make_ring_layout()
 
   for (unsigned i_node = 0; i_node != _nodes.size(); ++i_node)
   {
-    Node* current_node = _nodes[i_node];
+    ArticleNode* current_node = _nodes[i_node];
 
     if (inner_ring_node_weight_sum >= cluster_node_weight_sum * 0.5)
       outer_rings.push_back(current_node);
@@ -167,7 +167,7 @@ Cluster::make_ring_layout()
 
   for (unsigned i_node = 0; i_node != inner_ring.size(); ++i_node)
   {
-    Node* current_node = inner_ring[i_node];
+    ArticleNode* current_node = inner_ring[i_node];
 
     current_node->_x = (cos(angle * i_node) * local_radius) + _position_x;
     current_node->_y = (sin(angle * i_node) * local_radius) + _position_y;
@@ -184,11 +184,11 @@ Cluster::make_ring_layout()
     double ring_edge_weight_min = min_edge_weigth + (i_ring * step_width);
     double ring_edge_weight_max = min_edge_weigth + ((i_ring+1) * step_width);
 
-    std::vector<Node*> current_ring;
+    std::vector<ArticleNode*> current_ring;
 
     for (unsigned i_node = 0; i_node != outer_rings.size(); ++i_node)
     {
-      Node* current_node = outer_rings[i_node];
+      ArticleNode* current_node = outer_rings[i_node];
 
       double max_edge_weight = get_max_edge_weight(current_node);
 
@@ -204,7 +204,7 @@ Cluster::make_ring_layout()
 
     for (unsigned i_node = 0; i_node != current_ring.size(); ++i_node)
     {
-      Node* current_node = current_ring[i_node];
+      ArticleNode* current_node = current_ring[i_node];
 
       current_node->_x = (cos(angle * i_node) * local_radius) + _position_x;
       current_node->_y = (sin(angle * i_node) * local_radius) + _position_y;
@@ -231,7 +231,7 @@ Cluster::create_default_cluster()
 //  // Create some nodes
 //  for (unsigned i = 0; i != 10; ++i)
 //  {
-//    Node* new_node = new Node(i, "unnamed");
+//    ArticleNode* new_node = new Node(i, "unnamed");
 //
 //    // Set Position
 //    new_node->_x = i;
@@ -245,8 +245,8 @@ Cluster::create_default_cluster()
 //  for (unsigned i = 0; i != 5; ++i)
 //  {
 //    // Create Edge between:
-//    Node* source = _nodes[i];
-//    Node* target = _nodes[i+1];
+//    ArticleNode* source = _nodes[i];
+//    ArticleNode* target = _nodes[i+1];
 //
 //    Edge* new_edge = new Edge(i, source, target, 0.5);
 //
@@ -264,7 +264,7 @@ Cluster::create_default_cluster()
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 double
-Cluster::get_max_edge_weight(Node* v1)
+Cluster::get_max_edge_weight(ArticleNode* v1)
 {
   double max_edge_weight = 0.0;
 
@@ -278,7 +278,7 @@ Cluster::get_max_edge_weight(Node* v1)
 }
 
 double
-Cluster::get_min_edge_weight(Node* v1)
+Cluster::get_min_edge_weight(ArticleNode* v1)
 {
   double min_edge_weight = 1.1;
 
@@ -292,7 +292,7 @@ Cluster::get_min_edge_weight(Node* v1)
 }
 
 double
-Cluster::get_average_edge_weight(Node* v1)
+Cluster::get_average_edge_weight(ArticleNode* v1)
 {
   double sum_edge_weight = 0.0;
   unsigned num_of_edges = 0;

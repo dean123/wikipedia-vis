@@ -20,9 +20,8 @@ namespace vta
 
   struct Node
   {
-    // Class constructors
-    Node(long, std::string, Article);
-    Node(long, double, double, std::string);
+    // Class constructor
+    Node(uint32_t, std::string);
 
     // Class destructors
     ~Node();
@@ -30,32 +29,50 @@ namespace vta
     // Variables
     bool _visited;
 
+    // Outgoing and incoming edges
+    std::vector<Edge*> outgoingEdges;
+    std::vector<Edge*> incomingEdges;
+
+    // New index
+    uint32_t _index;
+
     // Position
     double _x;
     double _y;
 
+    // Label (Article Name)
+    std::string _label;
+
     // Color
     float _color[3];
 
-    // wikidb article
-    Article _article;
-
-
-    // Article Member
 
     // Get the amount of edges at this node
     unsigned getDegree() const;
 
-    // Outgoing and incoming edges
-    std::vector<Edge*> outgoingEdges;   // comparisons
-    std::vector<Edge*> incomingEdges;
+  };
 
-    // New index
-    long _index;    //TODO uint32_t !!!
 
-    // Label (Article Name)
-    std::string _label;
+  struct ArticleNode : Node
+  {
+    // Class constructor
+    ArticleNode(long index, std::string title, Article article)
+    : Node(index, title), _article(article)
+    {}
 
+    // wikidb article
+    Article _article;
+  };
+
+
+  struct CategoryNode : Node
+  {
+    CategoryNode(long index, std::string title, Category category)
+    : Node(index, title), _category(category)
+    {}
+
+    // wikidb category
+    Category _category;
   };
 
 

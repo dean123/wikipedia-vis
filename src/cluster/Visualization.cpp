@@ -20,8 +20,8 @@ Visualization::Visualization()
   _nodes(),
   _edges(),
 
-  _index2node(),
-  _categoryIndex2node(),
+  _index2articleNode(),
+  _index2categoryNode(),
 
   _clusters(),
   _category_tree(),
@@ -51,16 +51,32 @@ Visualization::~Visualization()
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
+  \brief   Create a NODE for the article visualizaton and push pointer to node vector
+  \remarks ...
+*/
+
+ArticleNode*
+Visualization::create_article_node(long index, std::string const label, Article article)
+{
+  ArticleNode* newNode = new ArticleNode(index, label, article);
+
+  _nodes.push_back(newNode);
+
+  return newNode;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
   \brief   Create a NODE and push pointer to node vector
   \remarks ...
 */
 
-Node*
-Visualization::create_node(long index, std::string const label, Article article)
+CategoryNode*
+Visualization::create_category_node(long index, std::string const label, Category category)
 {
-  Node* newNode = new Node(index, label, article);
-
-  _nodes.push_back(newNode);
+  CategoryNode* newNode = new CategoryNode(index, label, category);
 
   return newNode;
 }
@@ -108,7 +124,7 @@ Visualization::get_edge_by_index(long index)
   \remarks ...
 */
 
-Node*
+ArticleNode*
 Visualization::get_node_by_index(long index)
 {
   return _nodes[index];
@@ -178,12 +194,13 @@ Visualization::get_cluster_by_index(unsigned index)
   \remarks id that replaced rev-id
 */
 
-bool
-Visualization::node_map_contains_id(int id)
-{
-  std::map<uint32_t,Node*>::iterator it = _index2node.find(id);
 
-  if(it != _index2node.end())
+bool
+Visualization::article_map_contains_id(int id)
+{
+  std::map<uint32_t,ArticleNode*>::iterator it = _index2articleNode.find(id);
+
+  if(it != _index2articleNode.end())
   {
    return true;
   }
@@ -193,9 +210,9 @@ Visualization::node_map_contains_id(int id)
 bool
 Visualization::cat_map_contains_id(int id)
 {
-  std::map<uint32_t,Node*>::iterator it = _categoryIndex2node.find(id);
+  std::map<uint32_t,CategoryNode*>::iterator it = _index2categoryNode.find(id);
 
-  if(it != _categoryIndex2node.end())
+  if(it != _index2categoryNode.end())
   {
    return true;
   }
@@ -214,46 +231,49 @@ Visualization::cat_map_contains_id(int id)
 void
 Visualization::visit_article(Article article, Cluster* current_cluster)
 {
-  if(!node_map_contains_id(article.index))
+  if(!article_map_contains_id(article.index))
   {
-    _index2node[article.index] = create_node(article.index,article.title, article);
-    current_cluster->add_node(_index2node[article.index]);
+    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
+    current_cluster->add_node(_index2articleNode[article.index]);
   }
 
   std::vector<SimPair> comparisons = article.getComparisons();
 
   for(unsigned k = 0; k < comparisons.size(); ++k)
   {
-    if (k == 100)
-      break;
-
     SimPair current_sim_pair = comparisons[k];
 
     uint32_t index = current_sim_pair.getIndex();
 
     Article article2 = _wikidb.getArticle(index);
 
-    if (!node_map_contains_id(index))
-    {
-      _index2node[index] = create_node(index, article2.title, article2);
-      current_cluster->add_node(_index2node[index]);
-    }
-
     uint32_t sim = current_sim_pair.getSim();
 
     double similarity = sim;
     similarity = similarity / 1000;
 
-    Edge* new_edge = create_edge(_index2node[article.index], _index2node[index], similarity);
-    current_cluster->add_edge(new_edge);
+
+    if (!article_map_contains_id(index))
+    {
+      _index2articleNode[index] = create_article_node(index, article2.title, article2);
+
+//      if (similarity > 0.8)
+        current_cluster->add_node(_index2articleNode[index]);
+    }
+
+
+    Edge* new_edge = create_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
+
+//    if (similarity > 0.8)
+      current_cluster->add_edge(new_edge);
 
     new_edge->_color[0] = 0.0f;
     new_edge->_color[1] = 0.0f;
     new_edge->_color[2] = similarity;
 
-    if (!_index2node[index]->_visited)
+    if (!_index2articleNode[index]->_visited)
     {
-      _index2node[index]->_visited = true;
+      _index2articleNode[index]->_visited = true;
       visit_article(article2, current_cluster);
     }
   }
@@ -268,15 +288,15 @@ Visualization::get_next_cluster()
 
   Article article = _wikidb.getArticle(_article_index);
 
-  if(!node_map_contains_id(article.index))
+  if(!article_map_contains_id(article.index))
   {
-    _index2node[article.index] = create_node(article.index,article.title, article);
-    current_cluster->add_node(_index2node[article.index]);
+    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
+    current_cluster->add_node(_index2articleNode[article.index]);
   }
 
-  if (!_index2node[article.index]->_visited)
+  if (!_index2articleNode[article.index]->_visited)
   {
-    _index2node[article.index]->_visited = true;
+    _index2articleNode[article.index]->_visited = true;
     visit_article(article, current_cluster);
   }
 
@@ -395,7 +415,6 @@ void
 Visualization::build_category_tree(Cluster* cluster)
 {
   std::cout << "Build category tree for " << cluster->get_node_num() << " nodes." << std::endl;
-  _category_tree->clear();
 
   // Get all parents of all articles in this cluster
   for (unsigned i_node = 0; i_node != cluster->get_node_num(); ++i_node)
@@ -410,8 +429,8 @@ Visualization::build_category_tree(Cluster* cluster)
 
       if(!cat_map_contains_id(parent.index))
       {
-        _categoryIndex2node[parent.index] = create_node(parent.index,parent.title, article);
-        _category_tree->add_node(_categoryIndex2node[parent.index]);
+        _index2categoryNode[parent.index] = create_category_node(parent.index,parent.title, parent);
+        _category_tree->add_node(_index2categoryNode[parent.index]);
       }
 
       std::vector<uint32_t> parent_parents = parent.getParents();
@@ -420,15 +439,16 @@ Visualization::build_category_tree(Cluster* cluster)
       {
         Category parent_parent = _wikidb.getCategory(parent_parents[j]);
 
-        if(!cat_map_contains_id(parent_parent.index))
+//        if(!cat_map_contains_id(parent_parent.index))
+        if(cat_map_contains_id(parent_parent.index))
         {
-          _categoryIndex2node[parent_parent.index] = create_node(parent_parent.index,parent_parent.title, article);
-          _category_tree->add_node(_categoryIndex2node[parent_parent.index]);
-        }
+//          _index2categoryNode[parent_parent.index] = create_node(parent_parent.index,parent_parent.title, article);
+//          _category_tree->add_node(_index2categoryNode[parent_parent.index]);
 
-        Edge* new_edge = create_edge(_categoryIndex2node[parent_parent.index],
-                                     _categoryIndex2node[parent.index], 0.9);
-        _category_tree->add_edge(new_edge);
+          Edge* new_edge = create_edge(_index2categoryNode[parent_parent.index],
+                                       _index2categoryNode[parent.index], 0.9);
+          _category_tree->add_edge(new_edge);
+        }
       }
     }
   }

@@ -72,62 +72,59 @@ CategoryTree::make_category_tree_layout()
   double node_size = 100.0;
 
   double width = 1920.0;
-  double height = 1080.0;
+  double height = 4320.0;
 
   // Sort node vector according to their node weights
   std::sort(_nodes.begin(), _nodes.end(), nodes_compare_func);
 
   // Starting positions for nodes
-  double node_pos_x = 10.0;
-  double node_pos_y = 10.0;
+  double node_pos_x = 100.0;
+  double node_pos_y = 100.0;
 
+
+  std::vector<Node*> line;
   for (unsigned i_node = 0; i_node != _nodes.size(); ++i_node)
   {
     Node* current_node = _nodes[i_node];
 
     if (current_node->incomingEdges.size() == 0)
     {
-      current_node->_x = node_pos_x;
-      current_node->_y = node_pos_y;
+      line.push_back(current_node);
     }
+  }
 
-    else
+  double step_width_y = height / line.size();
+
+  std::vector<Node*> second_line;
+  for (unsigned i_node = 0; i_node != line.size(); ++i_node)
+  {
+    Node* current_node = line[i_node];
+
+    current_node->_x = node_pos_x;
+    current_node->_y = node_pos_y;
+
+    node_pos_y += step_width_y;
+
+    for (unsigned i_edge = 0; i_edge != current_node->outgoingEdges.size(); ++i_edge)
     {
-      current_node->_x = node_pos_x;
-      current_node->_y = height/2;
+      Node* out_node = current_node->outgoingEdges[i_edge]->getTarget();
+      second_line.push_back(out_node);
     }
+  }
 
 
-    node_pos_x += 10.0;
+  node_pos_x = width / 2;
+  node_pos_y = 100.0;
+  step_width_y = height / second_line.size();
 
-//    Node* current_node = _nodes[i_node];
-//
-//    current_node->_x = node_pos_x;
-//    current_node->_y = node_pos_y;
-//
-//    unsigned node_num = current_node->outgoingEdges.size();
-//
-//    double node_size = 100.0;
-//    double width_height = node_size * sqrt(node_num);
-//    double radius = node_size * node_num + width_height;
-//
-//    double angle = (M_PI * 2.0)/node_num;
-//
-//    for (unsigned i = 0; i != node_num; ++i)
-//    {
-//      Edge* in_edge = current_node->outgoingEdges[i];
-//      Node* target = in_edge->getTarget();
-//
-//      target->_x = (cos(angle * i) * radius) + node_pos_x;
-//      target->_y = (sin(angle * i) * radius) + node_pos_y;
-//    }
-//
-//    node_pos_x += radius * 2;
-//    if (node_pos_x > 10000000)
-//    {
-//      node_pos_x = 0.0;
-//      node_pos_y += radius * 2;
-//    }
+  for (unsigned i_node = 0; i_node != second_line.size(); ++i_node)
+  {
+    Node* current_node = second_line[i_node];
+
+    current_node->_x = node_pos_x;
+    current_node->_y = node_pos_y;
+
+    node_pos_y += step_width_y;
   }
 }
 

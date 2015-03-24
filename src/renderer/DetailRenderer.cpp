@@ -243,8 +243,9 @@ DetailRenderer::display()
   _modelMatrixStack.clear();
   _modelMatrixStack.push();
   {
-    _modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
-    _modelMatrixStack.scale(_scaleVector);
+    // Scale and Translate is disabled
+//    _modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
+//    _modelMatrixStack.scale(_scaleVector);
 
     // set current model view matrix
     _uniformSet.set_mat4("Model", _modelMatrixStack.top());
@@ -272,56 +273,52 @@ DetailRenderer::display()
   }
   _modelMatrixStack.pop();
 
-//
-//  // LABEL NODES
-//  for (unsigned i = 0; i != category_tree->get_node_num(); ++i)
-//  {
-//    if (i % 30 == 29)
-//    {
-//
-//      Node* current_node = category_tree->get_node(i);
-//
-//      gloost::Vector3 text_position(current_node->_x, current_node->_y, 0.0);
-//
-//      _modelMatrixStack.clear();
-//      _modelMatrixStack.push();
-//      {
-//        _modelMatrixStack.scale(_scaleVector);
-//
-//         text_position = text_position + _translateVector;
-//         text_position = _modelMatrixStack.top() * text_position;
-//      }
-//
-//      _modelMatrixStack.pop();
-//
-//      std::string label = current_node->_label;
-//
-//      // draw text
-//      glPushMatrix();
-//      glPushAttrib(GL_ALL_ATTRIB_BITS);
-//      {
-//        glDisable(GL_DEPTH_TEST);
-//        glDepthMask(GL_FALSE);
-//        glEnable(GL_TEXTURE_2D);
-//
-//        glMatrixMode(GL_PROJECTION);
-//        gloostLoadMatrix(_projectionMatrix.data());
-//
-//        glMatrixMode(GL_MODELVIEW);
-//        gloostLoadMatrix(_viewMatrix.data());
-//
-//        _typeWriter->beginText();
-//        _typeWriter->setScale(2.0);
-//        {
-//          glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-//          _typeWriter->writeLine(text_position[0], text_position[1], label);
-//        }
-//        _typeWriter->endText();
-//      }
-//      glPopAttrib();
-//      glPopMatrix();
-//    }
-//  }
+
+  // LABEL NODES
+  for (unsigned i = 0; i != category_tree->get_node_num(); ++i)
+  {
+    Node* current_node = category_tree->get_node(i);
+
+    gloost::Vector3 text_position(current_node->_x, current_node->_y, 0.0);
+
+    _modelMatrixStack.clear();
+    _modelMatrixStack.push();
+    {
+      _modelMatrixStack.scale(_scaleVector);
+
+       text_position = text_position + _translateVector;
+       text_position = _modelMatrixStack.top() * text_position;
+    }
+
+    _modelMatrixStack.pop();
+
+    std::string label = current_node->_label;
+
+    // draw text
+    glPushMatrix();
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    {
+      glDisable(GL_DEPTH_TEST);
+      glDepthMask(GL_FALSE);
+      glEnable(GL_TEXTURE_2D);
+
+      glMatrixMode(GL_PROJECTION);
+      gloostLoadMatrix(_projectionMatrix.data());
+
+      glMatrixMode(GL_MODELVIEW);
+      gloostLoadMatrix(_viewMatrix.data());
+
+      _typeWriter->beginText();
+      _typeWriter->setScale(2.0);
+      {
+        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+        _typeWriter->writeLine(text_position[0], text_position[1], label);
+      }
+      _typeWriter->endText();
+    }
+    glPopAttrib();
+    glPopMatrix();
+  }
 }
 
 
@@ -365,6 +362,8 @@ DetailRenderer::mousePress(int x, int y, int btn, int mods)
 {
   _mouseState.setButtonState(btn + 1, true);
   _mouseState.setPosition((float)x, (float)(_height - y));
+
+
 }
 
 

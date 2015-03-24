@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
 
 
   // GLFW detail window init
-  GLFWwindow* detail_window = glfwCreateWindow(1920, 1080, "Detail Window", NULL, NULL);
+  GLFWwindow* detail_window = glfwCreateWindow(1920, 4320, "Detail Window", NULL, NULL);
 
   if (!detail_window)
   {

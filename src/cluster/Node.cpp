@@ -7,7 +7,7 @@ namespace vta
 {
 
 
-Node::Node(long index, std::string label, Article article)
+Node::Node(uint32_t index, std::string label)
  : _visited(false),
 
    outgoingEdges(),
@@ -20,36 +20,11 @@ Node::Node(long index, std::string label, Article article)
 
    _label(label),
 
-   _color(),
-
-   _article(article)
+   _color()
  {
    _color[0] = ((double) rand() / (RAND_MAX));
    _color[1] = ((double) rand() / (RAND_MAX));
    _color[2] = ((double) rand() / (RAND_MAX));
- }
-
-
-Node::Node(long index, double x, double y, std::string label)
- : _visited(false),
-
-   outgoingEdges(),
-   incomingEdges(),
-
-   _index(index),
-
-   _x(x),
-   _y(y),
-
-   _label(label),
-
-   _color(),
-
-   _article()
- {
-   _color[0] = 0.0;
-   _color[1] = 1.0;
-   _color[2] = 0.0;
  }
 
 

@@ -57,6 +57,8 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _translateVector(0.0, 0.0, 0.0),
   _scaleVector(0.005, 0.005, 1.0),
 
+  _transformToScreen(),
+
   _graph(graph),
 
   _max_similarity(1.0),
@@ -87,6 +89,8 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _projectionMatrix.setIdentity();
   _viewMatrix.setIdentity();
   _modelMatrixStack.clear();
+
+  _transformToScreen.setIdentity();
 
   gloost::gl::gloostOrtho(_projectionMatrix,
                           0.0, _width,
@@ -398,7 +402,7 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
   _modelMatrixStack.clear();
   _modelMatrixStack.push();
   {
-    if (_cluster_detail_view)
+    if (_cluster_detail_view) // No panning and zooming
     {
       Cluster* detail_cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
 
@@ -413,6 +417,8 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
       double cluster_x = detail_cluster->get_position_x();
       double cluster_y = detail_cluster->get_position_y();
       _modelMatrixStack.translate(-cluster_x, -cluster_y, 0.0);
+
+//      _transformToScreen = _modelMatrixStack.top();
 
       // set current model view matrix
       _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top()));
@@ -476,6 +482,8 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
 void
 OverviewRenderer::display()
 {
+  //fill_vbo_edges();
+
   // setup clear color and clear screen
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -693,41 +701,42 @@ OverviewRenderer::mousePress(int x, int y, int btn, int mods)
 
     if (_cluster_detail_view) /// Click on nodes
     {
-//      Cluster* detail_cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
-//
-//      double node_size = 150000.0;
-//
-//      gloost::Matrix model_matrix;
-//      float scale = _height/(detail_cluster->get_radius() * 2);
-//
-//      model_matrix.setScale(gloost::Vector3(scale, scale,0.0));
-//
-//      mouse_position = model_matrix * mouse_position;
-//
-//      // Translate from original cluster position to 0,0
-//      mouse_position[0] -= detail_cluster->get_position_x() * scale;
-//      mouse_position[1] -= detail_cluster->get_position_y() * scale;
-//
-//      // translate to the middle of the screen
-//      mouse_position[0] += _width/2;
-//      mouse_position[1] += _height/2;
-//
-//      std::cout << mouse_position[0] << "   " << mouse_position[1] << std::endl;
-//
-//
-//      for (unsigned i = 0; i != detail_cluster->get_node_num(); ++i)
-//      {
-//        Node* current_node = detail_cluster->get_node(i);
-//
-//        // Check if mouse is over this node
-//        if (mouse_position[0] >= current_node->_x - node_size && mouse_position[0] <= current_node->_x + node_size &&
-//            mouse_position[1] >= current_node->_y - node_size && mouse_position[1] <= current_node->_y + node_size)
-//            {
-//              std::cout << "mouse hit" << std::endl;
-//
-//              current_node->_article.info();
-//            }
-//      }
+      Cluster* detail_cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
+
+      gloost::Matrix model_matrix;
+      float scale = _height/(detail_cluster->get_radius() * 2);
+
+      // translate to the middle of the screen
+      mouse_position[0] -= _width/2;
+      mouse_position[1] -= _height/2;
+
+      // Translate from original cluster position to 0,0
+      mouse_position[0] += detail_cluster->get_position_x() * 1/scale;
+      mouse_position[1] += detail_cluster->get_position_y() * 1/scale;
+
+      model_matrix.setScale(gloost::Vector3(1/scale, 1/scale,0.0));
+
+      mouse_position = model_matrix.inverted() * mouse_position;
+
+
+      double node_size = 10000.0;
+
+      std::cout << "Mouse pos: " << mouse_position[0] << "   " << mouse_position[1] << std::endl;
+
+      for (unsigned i = 0; i != detail_cluster->get_node_num(); ++i)
+      {
+        Node* current_node = detail_cluster->get_node(i);
+        if (i == 0)
+          std::cout << "Node pos: " << current_node->_x << "   " << current_node->_y << std::endl;
+
+        // Check if mouse is over this node
+        if (mouse_position[0] >= current_node->_x - node_size && mouse_position[0] <= current_node->_x + node_size &&
+            mouse_position[1] >= current_node->_y - node_size && mouse_position[1] <= current_node->_y + node_size)
+            {
+              current_node->_label;
+            }
+      }
+
     }
 
 
@@ -781,6 +790,8 @@ OverviewRenderer::mouseMove(int x, int y)
 {
   _mouseState.setPosition((float)x, (float)(_height - y));
 
+  gloost::Vector3 mouse_position = _mouseState.getPosition();
+
   /// Panning
   if (!_cluster_detail_view)
   {
@@ -790,6 +801,46 @@ OverviewRenderer::mouseMove(int x, int y)
 
       _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
     }
+  }
+  else
+  {
+      Cluster* detail_cluster = _graph->get_cluster_by_index(_graph->_detail_view_cluster_index);
+
+      double node_size = 10000.0;
+//
+//      float scale = _height/(detail_cluster->get_radius() * 2);
+//
+//      // Translate from original cluster position to 0,0
+//      mouse_position[0] += detail_cluster->get_position_x();
+//      mouse_position[1] += detail_cluster->get_position_y();
+//
+//      // translate to the middle of the screen
+//      mouse_position[0] -= _width/2;
+//      mouse_position[1] -= _height/2;
+//
+//      gloost::Matrix model_matrix;
+//
+//      model_matrix.setScale(gloost::Vector3(scale, scale,0.0));
+//
+//      mouse_position = model_matrix.inverted() * mouse_position;
+
+      mouse_position = _transformToScreen.inverted() * mouse_position;
+
+//      std::cout << "Mouse pos: " << mouse_position[0] << "   " << mouse_position[1] << std::endl;
+
+      for (unsigned i = 0; i != detail_cluster->get_node_num(); ++i)
+      {
+        Node* current_node = detail_cluster->get_node(i);
+//        if (i == 0)
+//          std::cout << "Node pos: " << current_node->_x << "   " << current_node->_y << std::endl;
+
+        // Check if mouse is over this node
+        if (mouse_position[0] >= current_node->_x - node_size && mouse_position[0] <= current_node->_x + node_size &&
+            mouse_position[1] >= current_node->_y - node_size && mouse_position[1] <= current_node->_y + node_size)
+            {
+              current_node->_label;
+            }
+      }
   }
 
 
@@ -971,6 +1022,7 @@ OverviewRenderer::keyPress(int key, int mods)
     case 256: // ESC
     {
       _cluster_detail_view = false;
+      _graph->get_category_tree()->clear();
 
       break;
     }

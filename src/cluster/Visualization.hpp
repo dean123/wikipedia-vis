@@ -57,11 +57,12 @@ namespace vta
       virtual ~Visualization();
 
       // Create Nodes and Edges
-      Node* create_node(long, std::string const, Article);
+      ArticleNode* create_article_node (long, std::string const, Article);
+      CategoryNode* create_category_node(long, std::string const, Category);
       Edge* create_edge(Node*, Node*, double);
 
       // Get Nodes and Edges
-      Node* get_node_by_index(long); /// delete
+      ArticleNode* get_node_by_index(long); /// delete
       Edge* get_edge_by_index(long); /// delete
 
       int get_node_num() const; // replace durch unsigned counter?
@@ -94,11 +95,11 @@ namespace vta
       void build_category_tree(Cluster*);
 
     private:
-      std::vector<Node*> _nodes; /// delete
+      std::vector<ArticleNode*> _nodes; /// delete
       std::vector<Edge*> _edges; /// delete
 
-      std::map<uint32_t,Node*> _index2node;
-      std::map<uint32_t,Node*> _categoryIndex2node;
+      std::map<uint32_t,ArticleNode*> _index2articleNode;
+      std::map<uint32_t,CategoryNode*> _index2categoryNode;
 
       // Clustering
       std::vector<Cluster*> _clusters;
@@ -115,7 +116,7 @@ namespace vta
       WikiDB _wikidb;
 
       // to check if nodes allready exist
-      bool node_map_contains_id(int);
+      bool article_map_contains_id(int);
       bool cat_map_contains_id(int);
 
 
