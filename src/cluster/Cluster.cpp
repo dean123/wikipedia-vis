@@ -53,6 +53,20 @@ Cluster::get_edge_num()
   return _edges.size();
 }
 
+
+std::vector<ArticleNode*>
+Cluster::get_nodes() const
+{
+  return _nodes;
+}
+
+
+std::vector<ArticleEdge*>
+Cluster::get_edges() const
+{
+  return _edges;
+}
+
 // Set Cluster Position
 void
 Cluster::set_position(double x, double y)

@@ -45,6 +45,8 @@ class OverviewRenderer
     // initialize
     bool initialize();
 
+    void fill_vbos();
+
     // Create a new vbo for a cluster
     void create_cluster_node_vbo(Cluster*);
     void create_cluster_edge_vbo(Cluster*);
@@ -77,6 +79,9 @@ class OverviewRenderer
     void mouseMove(int x, int y);
     void mouseScrollEnhance();
     void mouseScrollDecrease();
+
+    // Imgui callbacks
+    void imgui_mouse_released();
 
     // key input
     void keyPress(int key, int mods);

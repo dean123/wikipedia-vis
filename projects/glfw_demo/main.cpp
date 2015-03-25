@@ -107,6 +107,20 @@ void detail_window_mousebuttonfun(GLFWwindow* window, int button, int action, in
     detail_renderer->mouseRelease(xpos, ypos, button, mods);
 }
 
+void imgui_window_mousebuttonfun(GLFWwindow* window, int button, int action, int mods)
+{
+  double xpos = 0;
+  double ypos = 0;
+
+  // retrieve latest cursor position
+  glfwGetCursorPos(window, &xpos, &ypos);
+
+  if (action)
+  {} // mouse press actions
+  else
+    overview_renderer->imgui_mouse_released();
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -213,8 +227,6 @@ int main(int argc, char *argv[])
 
 //  graph->create_graph_from_db("/media/HDD/RAM_CORPUS/SUBSETS/subset_sim_900_999.dat", "/media/HDD/RAM_CORPUS/SUBSETS/offset_subset_sim_900_999.dat");
 
-  graph->get_next_cluster();
-
   // GLFW
   glfwSetErrorCallback(glfw_errorfun);
 
@@ -298,6 +310,8 @@ int main(int argc, char *argv[])
   ImGui_ImplGlfw_Init(imgui_window, true);
   ImGui_ImplGlfw_InitFontsTexture();
 
+  glfwSetMouseButtonCallback(imgui_window, imgui_window_mousebuttonfun);
+
   bool show_test_window = true;
   bool show_another_window = false;
   ImVec4 clear_color = ImColor(114, 144, 154);
@@ -310,7 +324,7 @@ int main(int argc, char *argv[])
   char* buf = new char [256];
   int* num_of_clusters = new int(1);
 
-  overview_renderer->get_next_cluster(20);
+  overview_renderer->get_next_cluster(30);
 
   // Main loop
   while (!glfwWindowShouldClose(imgui_window))

@@ -25,6 +25,9 @@ namespace vta
       unsigned get_node_num();
       unsigned get_edge_num();
 
+      std::vector<ArticleNode*> get_nodes() const;
+      std::vector<ArticleEdge*> get_edges() const;
+
       // Set cluster global position
       void set_position(double, double);
 
@@ -39,7 +42,6 @@ namespace vta
       // Layout functions
       void make_radial_layout();
       void make_ring_layout();
-      void make_category_tree_layout();
 
       // Compute sum of all node weights
       unsigned get_node_weight_sum();

@@ -300,24 +300,26 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
     {
       _index2articleNode[index] = create_article_node(index, article2.title, article2);
 
-//      if (similarity > 0.8)
+      if (similarity > 0.8)
         current_cluster->add_node(_index2articleNode[index]);
     }
 
-
     ArticleEdge* new_edge = create_article_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
-
-//    if (similarity > 0.8)
-      current_cluster->add_edge(new_edge);
 
     new_edge->_color[0] = 0.0f;
     new_edge->_color[1] = 0.0f;
     new_edge->_color[2] = similarity;
 
-    if (!_index2articleNode[index]->_visited)
+    if (similarity > 0.8)
     {
-      _index2articleNode[index]->_visited = true;
-      visit_article(article2, current_cluster);
+      current_cluster->add_edge(new_edge);
+
+      if (!_index2articleNode[index]->_visited)
+      {
+        _index2articleNode[index]->_visited = true;
+
+        visit_article(article2, current_cluster);
+      }
     }
   }
 }

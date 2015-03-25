@@ -55,7 +55,7 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _modelMatrixStack(),
 
   _translateVector(0.0, 0.0, 0.0),
-  _scaleVector(0.00005, 0.00005, 1.0),
+  _scaleVector(0.005, 0.005, 1.0),
 
   _mouse_pos(0.0, 0.0, 0.0),
 
@@ -64,7 +64,7 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _graph(graph),
 
   _max_similarity(1.0),
-  _min_similarity(0.64),
+  _min_similarity(0.82),
 
   _blacklist(),
 
@@ -159,19 +159,53 @@ OverviewRenderer::initialize()
   _nodeShader->attachShader(GLOOST_SHADERPROGRAM_GEOMETRY_SHADER, "../../shaders/node.gs");
   _nodeShader->attachShader(GLOOST_SHADERPROGRAM_FRAGMENT_SHADER, "../../shaders/node.fs");
 
-
-  // Fill vbos with new positions
-  std::vector<ArticleNode*> drawable_nodes = _graph->get_nodes();
-  std::vector<ArticleEdge*> drawable_edges = _graph->get_edges();
-
-  fill_vbo_nodes(drawable_nodes);
-  fill_vbo_edges(drawable_edges);
+  fill_vbos();
 
   std::cout << "Initialized Visualization" << std::endl;
 
   return true;
 }
 
+
+void
+OverviewRenderer::fill_vbos()
+{
+  std::vector<ArticleNode*> drawable_nodes;
+  std::vector<ArticleEdge*> drawable_edges;
+
+
+  for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
+  {
+    // Add all nodes
+    std::vector<ArticleNode*> cluster_nodes = _graph->get_cluster_by_index(i)->get_nodes();
+    for (unsigned j = 0; j != cluster_nodes.size(); ++j)
+      drawable_nodes.push_back(cluster_nodes[j]);
+
+    // Add all edges
+    std::vector<ArticleEdge*> cluster_edges = _graph->get_cluster_by_index(i)->get_edges();
+    for (unsigned j = 0; j != cluster_edges.size(); ++j)
+    {
+      double similarity = cluster_edges[j]->getWeight();
+
+      if (similarity >= _min_similarity && similarity <= _max_similarity)
+      {
+        ArticleNode* source = cluster_edges[j]->getSource();
+        ArticleNode* target = cluster_edges[j]->getTarget();
+
+        if (source->_x != 0.0 && source->_y != 0.0)
+        {
+          if (target->_x != 0.0 && target->_y != 0.0)
+          {
+            drawable_edges.push_back(cluster_edges[j]);
+          }
+        }
+      }
+    }
+  }
+
+  fill_vbo_nodes(drawable_nodes);
+  fill_vbo_edges(drawable_edges);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,24 +288,19 @@ OverviewRenderer::fill_vbo_edges(std::vector<ArticleEdge*> const& edges)
 
     if (!blacklist_constains(title_source) && !blacklist_constains(title_target))
     {
-      double similarity = current_edge->getWeight();
+      container[vboIdx++] = source->_x; // source x
+      container[vboIdx++] = source->_y; // source y
 
-      if (similarity >= _min_similarity && similarity <= _max_similarity)
-      {
-        container[vboIdx++] = source->_x; // source x
-        container[vboIdx++] = source->_y; // source y
+      container[vboIdx++] = current_edge->_color[0]; // edge color r
+      container[vboIdx++] = current_edge->_color[1]; // edge color g
+      container[vboIdx++] = current_edge->_color[2]; // edge color b
 
-        container[vboIdx++] = current_edge->_color[0]; // edge color r
-        container[vboIdx++] = current_edge->_color[1]; // edge color g
-        container[vboIdx++] = current_edge->_color[2]; // edge color b
+      container[vboIdx++] = target->_x; // target x
+      container[vboIdx++] = target->_y; // target y
 
-        container[vboIdx++] = target->_x; // target x
-        container[vboIdx++] = target->_y; // target y
-
-        container[vboIdx++] = current_edge->_color[0]; // edge color r
-        container[vboIdx++] = current_edge->_color[1]; // edge color g
-        container[vboIdx++] = current_edge->_color[2]; // edge color b
-      }
+      container[vboIdx++] = current_edge->_color[0]; // edge color r
+      container[vboIdx++] = current_edge->_color[1]; // edge color g
+      container[vboIdx++] = current_edge->_color[2]; // edge color b
     }
   }
   _vboEdges = gloost::gl::Vbo4::create(interleavedAttributes);
@@ -313,9 +342,13 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
     }
     else
     {
-      //_modelMatrixStack.translate(_translateVector[0], _translateVector[1], 0.0);
+//      _modelMatrixStack.translate(-_graph->get_max_x() / 2, -_graph->get_max_y() / 2, 0.0);
+
+      _modelMatrixStack.translate(_translateVector[0] * _scaleVector[0], _translateVector[1] * _scaleVector[1], 0.0);
+
 //      _modelMatrixStack.translate(_mouse_pos);
       _modelMatrixStack.scale(_scaleVector);
+
 
       _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top())); // set current model view matrix
     }
@@ -727,11 +760,9 @@ OverviewRenderer::mouseMove(int x, int y)
   {
     if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
     {
-      //gloost::Vector3 mouse_drag = _mouseState.getSpeed();
+      gloost::Vector3 mouse_drag = _mouseState.getSpeed();
 
-      //_translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
-
-      _translateVector += _mouseState.getPosition() - _mouseState.getLastMouseDownPosition();
+      _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
     }
   }
 }
@@ -775,6 +806,20 @@ OverviewRenderer::mouseScrollDecrease()
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
+  \brief   When imgui mouse released, this function is called
+  \param
+  \remarks ...
+*/
+
+void
+OverviewRenderer::imgui_mouse_released()
+{
+  fill_vbos();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
   \brief   Key input
   \param   key   The key code as enum
   \param   mods  The modification key
@@ -793,11 +838,7 @@ OverviewRenderer::keyPress(int key, int mods)
     case 82: //GLFW_KEY_R
     {
       // Fill vbos with new positions
-      std::vector<ArticleNode*> drawable_nodes = _graph->get_nodes();
-      std::vector<ArticleEdge*> drawable_edges = _graph->get_edges();
-
-      fill_vbo_nodes(drawable_nodes);
-      fill_vbo_edges(drawable_edges);
+      fill_vbos();
 
       // Reload shaders
       _edgeShader->reloadShaders();
@@ -817,11 +858,7 @@ OverviewRenderer::keyPress(int key, int mods)
         _graph->get_cluster_by_index(i)->make_radial_layout();
 
       // Fill vbos with new positions
-      std::vector<ArticleNode*> drawable_nodes = _graph->get_nodes();
-      std::vector<ArticleEdge*> drawable_edges = _graph->get_edges();
-
-      fill_vbo_nodes(drawable_nodes);
-      fill_vbo_edges(drawable_edges);
+      fill_vbos();
 
       break;
     }
@@ -835,11 +872,7 @@ OverviewRenderer::keyPress(int key, int mods)
         _graph->get_cluster_by_index(i)->make_ring_layout();
 
       // Fill vbos with new positions
-      std::vector<ArticleNode*> drawable_nodes = _graph->get_nodes();
-      std::vector<ArticleEdge*> drawable_edges = _graph->get_edges();
-
-      fill_vbo_nodes(drawable_nodes);
-      fill_vbo_edges(drawable_edges);
+      fill_vbos();
 
       break;
     }
@@ -990,11 +1023,7 @@ OverviewRenderer::get_next_cluster(unsigned number_of_cluster)
     _graph->get_cluster_by_index(i)->make_radial_layout();
 
   // Fill vbos with new positions
-  std::vector<ArticleNode*> drawable_nodes = _graph->get_nodes();
-  std::vector<ArticleEdge*> drawable_edges = _graph->get_edges();
-
-  fill_vbo_nodes(drawable_nodes);
-  fill_vbo_edges(drawable_edges);
+  fill_vbos();
 }
 
 
