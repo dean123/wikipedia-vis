@@ -329,39 +329,39 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
 void
 Visualization::get_next_cluster()
 {
-//  Cluster* current_cluster = new Cluster();
-//
-//  Article article = _wikidb.getArticle(_article_index);
-//
-//  if(!article_map_contains_id(article.index))
-//  {
-//    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
-//    current_cluster->add_node(_index2articleNode[article.index]);
-//  }
-//
-//  if (!_index2articleNode[article.index]->_visited)
-//  {
-//    _index2articleNode[article.index]->_visited = true;
-//    visit_article(article, current_cluster);
-//  }
-//
-//  current_cluster->set_radius(2000.0);
-//  current_cluster->set_position(_article_index * 200.0, 0.0);
-//  current_cluster->make_radial_layout();
-//
-//  if (current_cluster->get_node_num() != 0)
-//  {
-//    std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
-//
-//    _clusters.push_back(current_cluster);
-//    _article_index++;
-//  }
-//
-//  else
-//  {
-//    _article_index++;
-//    get_next_cluster();
-//  }
+  Cluster* current_cluster = new Cluster();
+
+  Article article = _wikidb.getArticle(_article_index);
+
+  if(!article_map_contains_id(article.index))
+  {
+    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
+    current_cluster->add_node(_index2articleNode[article.index]);
+  }
+
+  if (!_index2articleNode[article.index]->_visited)
+  {
+    _index2articleNode[article.index]->_visited = true;
+    visit_article(article, current_cluster);
+  }
+
+  current_cluster->set_radius(2000.0);
+  current_cluster->set_position(_article_index * 200.0, 0.0);
+  current_cluster->make_radial_layout();
+
+  if (current_cluster->get_node_num() != 0)
+  {
+    std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
+
+    _clusters.push_back(current_cluster);
+    _article_index++;
+  }
+
+  else
+  {
+    _article_index++;
+    get_next_cluster();
+  }
 }
 
 
