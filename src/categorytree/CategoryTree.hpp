@@ -34,6 +34,7 @@ namespace vta
       std::vector<CategoryEdge*> get_highlighted_edges() const;
 
       // Layout functions
+      std::vector<CategoryNode*> create_vertical_node_line(std::vector<CategoryNode*>&, double);
       void make_category_tree_layout();
 
       // Set highlighted nodes

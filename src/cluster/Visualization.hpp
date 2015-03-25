@@ -74,6 +74,9 @@ namespace vta
       unsigned get_cluster_num() const;
       Cluster* get_cluster_by_index(unsigned);
 
+      // Load edges for new similarity values
+      void add_edges_for_sim(double, double);
+
       // Get Visualization boundaries
       double get_max_x() const;
       double get_max_y() const;

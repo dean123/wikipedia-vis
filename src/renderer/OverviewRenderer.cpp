@@ -344,7 +344,7 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
     {
 //      _modelMatrixStack.translate(-_graph->get_max_x() / 2, -_graph->get_max_y() / 2, 0.0);
 
-      _modelMatrixStack.translate(_translateVector[0] * _scaleVector[0], _translateVector[1] * _scaleVector[1], 0.0);
+//      _modelMatrixStack.translate(_translateVector[0] * _scaleVector[0], _translateVector[1] * _scaleVector[1], 0.0);
 
 //      _modelMatrixStack.translate(_mouse_pos);
       _modelMatrixStack.scale(_scaleVector);
@@ -814,6 +814,9 @@ OverviewRenderer::mouseScrollDecrease()
 void
 OverviewRenderer::imgui_mouse_released()
 {
+  // Get new edges
+  _graph->add_edges_for_sim(_min_similarity, _max_similarity);
+
   fill_vbos();
 }
 

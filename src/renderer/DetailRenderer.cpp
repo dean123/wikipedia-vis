@@ -413,13 +413,13 @@ DetailRenderer::mouseMove(int x, int y)
 {
   _mouseState.setPosition((float)x, (float)(_height - y));
 
-  /// Panning
-  if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
-  {
-    gloost::Vector3 mouse_drag = _mouseState.getSpeed();
-
-    _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
-  }
+//  /// Panning
+//  if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
+//  {
+//    gloost::Vector3 mouse_drag = _mouseState.getSpeed();
+//
+//    _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
+//  }
 }
 
 
@@ -435,16 +435,16 @@ void
 DetailRenderer::mouseScrollEnhance()
 {
   // Zoom in
-  _scaleVector[0] = _scaleVector[0] * 1.1;
-  _scaleVector[1] = _scaleVector[1] * 1.1;
+//  _scaleVector[0] = _scaleVector[0] * 1.1;
+//  _scaleVector[1] = _scaleVector[1] * 1.1;
 }
 
 void
 DetailRenderer::mouseScrollDecrease()
 {
   // Zoom out
-  _scaleVector[0] = _scaleVector[0] * 0.8;
-  _scaleVector[1] = _scaleVector[1] * 0.8;
+//  _scaleVector[0] = _scaleVector[0] * 0.8;
+//  _scaleVector[1] = _scaleVector[1] * 0.8;
 }
 
 

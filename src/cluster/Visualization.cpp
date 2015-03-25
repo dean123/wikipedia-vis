@@ -329,31 +329,39 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
 void
 Visualization::get_next_cluster()
 {
-  Cluster* current_cluster = new Cluster();
-
-  Article article = _wikidb.getArticle(_article_index);
-
-  if(!article_map_contains_id(article.index))
-  {
-    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
-    current_cluster->add_node(_index2articleNode[article.index]);
-  }
-
-  if (!_index2articleNode[article.index]->_visited)
-  {
-    _index2articleNode[article.index]->_visited = true;
-    visit_article(article, current_cluster);
-  }
-
-  current_cluster->set_radius(2000.0);
-  current_cluster->set_position(_article_index * 200.0, 0.0);
-  current_cluster->make_radial_layout();
-
-  _clusters.push_back(current_cluster);
-
-  std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
-
-  _article_index++;
+//  Cluster* current_cluster = new Cluster();
+//
+//  Article article = _wikidb.getArticle(_article_index);
+//
+//  if(!article_map_contains_id(article.index))
+//  {
+//    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
+//    current_cluster->add_node(_index2articleNode[article.index]);
+//  }
+//
+//  if (!_index2articleNode[article.index]->_visited)
+//  {
+//    _index2articleNode[article.index]->_visited = true;
+//    visit_article(article, current_cluster);
+//  }
+//
+//  current_cluster->set_radius(2000.0);
+//  current_cluster->set_position(_article_index * 200.0, 0.0);
+//  current_cluster->make_radial_layout();
+//
+//  if (current_cluster->get_node_num() != 0)
+//  {
+//    std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
+//
+//    _clusters.push_back(current_cluster);
+//    _article_index++;
+//  }
+//
+//  else
+//  {
+//    _article_index++;
+//    get_next_cluster();
+//  }
 }
 
 
@@ -368,6 +376,59 @@ double
 Visualization::get_cluster_size() const
 {
   return _cluster_size;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Add new eges for similarity threshold
+  \remarks
+*/
+
+void
+Visualization::add_edges_for_sim(double min_sim, double max_sim)
+{
+  for (unsigned i = 0; i != _clusters.size(); ++i)
+  {
+    Cluster* current_cluster = _clusters[i];
+
+    for (unsigned j = 0; j != current_cluster->get_node_num(); ++j)
+    {
+      ArticleNode* node = current_cluster->get_node(j);
+
+      Article article = node->_article;
+      std::vector<SimPair> comparisons = article.getComparisons();
+
+      for(unsigned k = 0; k < comparisons.size(); ++k)
+      {
+        SimPair current_sim_pair = comparisons[k];
+
+        uint32_t index = current_sim_pair.getIndex();
+
+        Article article2 = _wikidb.getArticle(index);
+
+        uint32_t sim = current_sim_pair.getSim();
+
+        double similarity = sim;
+        similarity = similarity / 1000;
+
+        if (similarity >= min_sim && similarity <= max_sim)
+        {
+          if (article_map_contains_id(index))
+          {
+            ArticleEdge* new_edge = create_article_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
+
+            new_edge->_color[0] = 0.0f;
+            new_edge->_color[1] = 0.0f;
+            new_edge->_color[2] = similarity;
+
+            current_cluster->add_edge(new_edge);
+          }
+        }
+      }
+    }
+  }
 }
 
 
@@ -507,30 +568,28 @@ Visualization::build_category_tree(Cluster* cluster)
         }
         else
         {
-          bool allread_in_vec = false;
-          for (unsigned k = 0; k != all_parents.size(); ++k)
-          {
-            if (all_parents[k] == parent_parents[j])
-            {
-              // Dieser Parent hat mehrere Children
-              std::cout << parent_parent.title << std::endl;
-
-              allread_in_vec = true;
-
-              if(!cat_map_contains_id(parent_parent.index))
-              {
-                _index2categoryNode[parent_parent.index] = create_category_node(all_parents[k], parent_parent.title, parent_parent);
-                similar_parents.push_back(parent_parent.index);
-              }
-
-              break;
-            }
-          }
-
-          if (!allread_in_vec)
-          {
-            all_parents.push_back(parent_parent.index);
-          }
+//          bool allread_in_vec = false;
+//          for (unsigned k = 0; k != all_parents.size(); ++k)
+//          {
+//            if (all_parents[k] == parent_parents[j])
+//            {
+//              // Dieser Parent hat mehrere Children
+//              allread_in_vec = true;
+//
+//              if(!cat_map_contains_id(parent_parent.index))
+//              {
+//                _index2categoryNode[parent_parent.index] = create_category_node(all_parents[k], parent_parent.title, parent_parent);
+//                similar_parents.push_back(parent_parent.index);
+//              }
+//
+//              break;
+//            }
+//          }
+//
+//          if (!allread_in_vec)
+//          {
+//            all_parents.push_back(parent_parent.index);
+//          }
         }
       }
     }
