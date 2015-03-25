@@ -200,12 +200,7 @@ void
 Visualization::create_graph_from_db(const char g_bin_data_filename[], const char offset_file_name[])
 {
     std::cout << "in create_Visualization_from_db`" << std::endl;
-    WikiDB wikidb("/media/HDD/testdb/pages");
-    std::vector<uint32_t> articleVec = wikidb.getArticles();
-    std::vector<uint32_t> categoryVec = wikidb.getCategories();
-
-    std::cout << "article vec size " << articleVec.size() << std::endl;
-    std::cout << "category vec size " << categoryVec.size() << std::endl;
+    WikiDB wikidb("/dev/shm/wikipedia-db/pages");
 
 //    Article article = wikidb.getArticle(1);
 //
@@ -243,7 +238,7 @@ Visualization::create_graph_from_db(const char g_bin_data_filename[], const char
 
 
 
-    for (auto i : articleVec) {
+    for (std::size_t i = 1; i < wikidb.sizeArticles(); ++i) {
       Article article = wikidb.getArticle(i);
       //Article articel(*i);
       std::vector<SimPair> compVector = article.getComparisons();
