@@ -15,11 +15,11 @@ namespace vta
 
       // Add node to Cluster
       void add_node(ArticleNode*);
-      void add_edge(Edge*);
+      void add_edge(ArticleEdge*);
 
       // Get node with index
       ArticleNode* get_node(unsigned);
-      Edge* get_edge(unsigned);
+      ArticleEdge* get_edge(unsigned);
 
       // Get Number of nodes and edges
       unsigned get_node_num();
@@ -50,7 +50,7 @@ namespace vta
     private:
       // Nodes and edges of cluster
       std::vector<ArticleNode*> _nodes;
-      std::vector<Edge*> _edges;
+      std::vector<ArticleEdge*> _edges;
       // Cluster position
       double _position_x;
       double _position_y;

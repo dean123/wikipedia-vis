@@ -10,9 +10,6 @@ namespace vta
 Node::Node(uint32_t index, std::string label)
  : _visited(false),
 
-   outgoingEdges(),
-   incomingEdges(),
-
    _index(index),
 
    _x(0.0),
@@ -33,9 +30,16 @@ Node::Node(uint32_t index, std::string label)
 
 
 unsigned
-Node::getDegree() const
+ArticleNode::getDegree() const
 {
-  return outgoingEdges.size() + incomingEdges.size();
+  return _outgoingEdges.size() + _incomingEdges.size();
+}
+
+
+unsigned
+CategoryNode::getDegree() const
+{
+  return _outgoingEdges.size() + _incomingEdges.size();
 }
 
 }

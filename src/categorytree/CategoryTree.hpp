@@ -14,30 +14,46 @@ namespace vta
       ~CategoryTree();
 
       // Add node to CategoryTree
-      void add_node(Node*);
-      void add_edge(Edge*);
+      void add_node(CategoryNode*);
+      void add_edge(CategoryEdge*);
 
       // Get node with index
-      Node* get_node(unsigned);
-      Edge* get_edge(unsigned);
+      CategoryNode* get_node(unsigned);
+      CategoryEdge* get_edge(unsigned);
 
       // Get Number of nodes and edges
       unsigned get_node_num();
       unsigned get_edge_num();
 
+      // Get all nodes and edges
+      std::vector<CategoryNode*> get_all_nodes() const;
+      std::vector<CategoryEdge*> get_all_edges() const;
+
+      // Get all highlighted nodes and edges
+      std::vector<CategoryNode*> get_highlighted_nodes() const;
+      std::vector<CategoryEdge*> get_highlighted_edges() const;
+
       // Layout functions
       void make_category_tree_layout();
 
+      // Set highlighted nodes
+      void add_highlighted_node(CategoryNode*);
+      void add_highlighted_edge(CategoryEdge*);
+
       // Clear nodes and edges
       void clear();
+      void clear_highlighting();
+
+      bool _highlight_mode;
 
     private:
-      // Nodes and edges of CategoryTree
-      std::vector<Node*> _nodes;
-      std::vector<Edge*> _edges;
+      // nodes and edges of CategoryTree
+      std::vector<CategoryNode*> _nodes;
+      std::vector<CategoryEdge*> _edges;
 
-      // Draw these nodes
-      std::vector<Node*> _drawable_nodes;
+      // Highlight these nodes
+      std::vector<CategoryNode*> _highlighted_nodes;
+      std::vector<CategoryEdge*> _highlighted_edges;
 
   };
 

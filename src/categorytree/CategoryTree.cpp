@@ -4,7 +4,7 @@ namespace vta
 {
 
 CategoryTree::CategoryTree()
-: _nodes(),_edges(),_drawable_nodes()
+: _highlight_mode(false), _nodes(),_edges(),_highlighted_nodes()
 {}
 
 
@@ -13,27 +13,27 @@ CategoryTree::~CategoryTree()
 
 
 void
-CategoryTree::add_node(Node* node)
+CategoryTree::add_node(CategoryNode* node)
 {
   _nodes.push_back(node);
 }
 
 
 void
-CategoryTree::add_edge(Edge* edge)
+CategoryTree::add_edge(CategoryEdge* edge)
 {
   _edges.push_back(edge);
 }
 
 
-Node*
+CategoryNode*
 CategoryTree::get_node(unsigned index)
 {
   return _nodes[index];
 }
 
 
-Edge*
+CategoryEdge*
 CategoryTree::get_edge(unsigned index)
 {
   return _edges[index];
@@ -53,6 +53,34 @@ CategoryTree::get_edge_num()
 }
 
 
+std::vector<CategoryNode*>
+CategoryTree::get_all_nodes() const
+{
+  return _nodes;
+}
+
+
+std::vector<CategoryEdge*>
+CategoryTree::get_all_edges() const
+{
+  return _edges;
+}
+
+
+std::vector<CategoryNode*>
+CategoryTree::get_highlighted_nodes() const
+{
+  return _highlighted_nodes;
+}
+
+
+std::vector<CategoryEdge*>
+CategoryTree::get_highlighted_edges() const
+{
+  return _highlighted_edges;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -62,7 +90,7 @@ CategoryTree::get_edge_num()
 */
 
 // Compare two nodes according to their weigth
-bool nodes_compare_func (Node* i, Node* j) { return (i->getDegree() > j->getDegree()); }
+bool nodes_compare_func (CategoryNode* i, CategoryNode* j) { return (i->getDegree() > j->getDegree()); }
 
 void
 CategoryTree::make_category_tree_layout()
@@ -82,12 +110,12 @@ CategoryTree::make_category_tree_layout()
   double node_pos_y = 100.0;
 
 
-  std::vector<Node*> line;
+  std::vector<CategoryNode*> line;
   for (unsigned i_node = 0; i_node != _nodes.size(); ++i_node)
   {
-    Node* current_node = _nodes[i_node];
+    CategoryNode* current_node = _nodes[i_node];
 
-    if (current_node->incomingEdges.size() == 0)
+    if (current_node->_incomingEdges.size() == 0)
     {
       line.push_back(current_node);
     }
@@ -95,19 +123,19 @@ CategoryTree::make_category_tree_layout()
 
   double step_width_y = height / line.size();
 
-  std::vector<Node*> second_line;
+  std::vector<CategoryNode*> second_line;
   for (unsigned i_node = 0; i_node != line.size(); ++i_node)
   {
-    Node* current_node = line[i_node];
+    CategoryNode* current_node = line[i_node];
 
     current_node->_x = node_pos_x;
     current_node->_y = node_pos_y;
 
     node_pos_y += step_width_y;
 
-    for (unsigned i_edge = 0; i_edge != current_node->outgoingEdges.size(); ++i_edge)
+    for (unsigned i_edge = 0; i_edge != current_node->_outgoingEdges.size(); ++i_edge)
     {
-      Node* out_node = current_node->outgoingEdges[i_edge]->getTarget();
+      CategoryNode* out_node = current_node->_outgoingEdges[i_edge]->getTarget();
       second_line.push_back(out_node);
     }
   }
@@ -119,7 +147,7 @@ CategoryTree::make_category_tree_layout()
 
   for (unsigned i_node = 0; i_node != second_line.size(); ++i_node)
   {
-    Node* current_node = second_line[i_node];
+    CategoryNode* current_node = second_line[i_node];
 
     current_node->_x = node_pos_x;
     current_node->_y = node_pos_y;
@@ -129,11 +157,42 @@ CategoryTree::make_category_tree_layout()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Set the highlighted nodes and edges
+  \remarks
+  \remarks
+*/
+
+void
+CategoryTree::add_highlighted_node(CategoryNode* cat_node)
+{
+  _highlighted_nodes.push_back(cat_node);
+
+  std::cout << "added node: " << cat_node->_category.title << std::endl;
+}
+
+
+void
+CategoryTree::add_highlighted_edge(CategoryEdge* cat_edge)
+{
+  _highlighted_edges.push_back(cat_edge);
+}
+
+
 void
 CategoryTree::clear()
 {
   _nodes.clear();
   _edges.clear();
+}
+
+void
+CategoryTree::clear_highlighting()
+{
+  _highlighted_nodes.clear();
+  _highlighted_edges.clear();
 }
 
 }

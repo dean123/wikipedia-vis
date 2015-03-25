@@ -56,21 +56,27 @@ namespace vta
       // class destructor
       virtual ~Visualization();
 
-      // Create Nodes and Edges
+      // Create Nodes and Edges for articles
       ArticleNode* create_article_node (long, std::string const, Article);
+      ArticleEdge* create_article_edge(ArticleNode*, ArticleNode*, double);
+      // Create nodes and edges for categorys
       CategoryNode* create_category_node(long, std::string const, Category);
-      Edge* create_edge(Node*, Node*, double);
-
-      // Get Nodes and Edges
-      ArticleNode* get_node_by_index(long); /// delete
-      Edge* get_edge_by_index(long); /// delete
+      CategoryEdge* create_category_edge(CategoryNode*, CategoryNode*, double);
 
       int get_node_num() const; // replace durch unsigned counter?
       int get_edge_num() const; // replace durch unsigned counter?
 
+      // Get all nodes and edges
+      std::vector<ArticleNode*> get_nodes();
+      std::vector<ArticleEdge*> get_edges();
+
       // Cluster getter
       unsigned get_cluster_num() const;
       Cluster* get_cluster_by_index(unsigned);
+
+      // Get Visualization boundaries
+      double get_max_x() const;
+      double get_max_y() const;
 
       // Create Visualization from data base
       void create_graph_from_db(const char input_file_name[], const char offset_file_name[]); // replace durch get cluster
@@ -93,10 +99,12 @@ namespace vta
 
       // Build category tree for a specific article
       void build_category_tree(Cluster*);
+      void set_highlighted_categories(ArticleNode*);
+      void reset_highlighted_categories();
 
     private:
-      std::vector<ArticleNode*> _nodes; /// delete
-      std::vector<Edge*> _edges; /// delete
+      std::vector<ArticleNode*> _nodes;
+      std::vector<ArticleEdge*> _edges;
 
       std::map<uint32_t,ArticleNode*> _index2articleNode;
       std::map<uint32_t,CategoryNode*> _index2categoryNode;
@@ -114,6 +122,10 @@ namespace vta
       // wikidb
       uint32_t _article_index;
       WikiDB _wikidb;
+
+      // boundaries of the whole visualization
+      double _max_x;
+      double _max_y;
 
       // to check if nodes allready exist
       bool article_map_contains_id(int);

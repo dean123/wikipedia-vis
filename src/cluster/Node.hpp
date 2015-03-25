@@ -16,6 +16,8 @@ namespace vta
 {
 
   class Edge;
+  class ArticleEdge;
+  class CategoryEdge;
 
 
   struct Node
@@ -28,10 +30,6 @@ namespace vta
 
     // Variables
     bool _visited;
-
-    // Outgoing and incoming edges
-    std::vector<Edge*> outgoingEdges;
-    std::vector<Edge*> incomingEdges;
 
     // New index
     uint32_t _index;
@@ -46,33 +44,39 @@ namespace vta
     // Color
     float _color[3];
 
-
-    // Get the amount of edges at this node
-    unsigned getDegree() const;
-
   };
 
 
   struct ArticleNode : Node
   {
     // Class constructor
-    ArticleNode(long index, std::string title, Article article)
-    : Node(index, title), _article(article)
+    ArticleNode(uint32_t index, std::string title, Article article)
+    : Node(index, title), _article(article), _outgoingEdges(), _incomingEdges()
     {}
+
+    unsigned getDegree() const;
 
     // wikidb article
     Article _article;
+    // Outgoing and incoming edges
+    std::vector<ArticleEdge*> _outgoingEdges;
+    std::vector<ArticleEdge*> _incomingEdges;
   };
 
 
   struct CategoryNode : Node
   {
-    CategoryNode(long index, std::string title, Category category)
-    : Node(index, title), _category(category)
+    CategoryNode(uint32_t index, std::string title, Category category)
+    : Node(index, title), _category(category), _outgoingEdges(), _incomingEdges()
     {}
+
+    unsigned getDegree() const;
 
     // wikidb category
     Category _category;
+    // Outgoing and incoming edges
+    std::vector<CategoryEdge*> _outgoingEdges;
+    std::vector<CategoryEdge*> _incomingEdges;
   };
 
 

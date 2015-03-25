@@ -150,7 +150,7 @@ DetailRenderer::fill_vbo_nodes()
 
   for (unsigned i = 0; i != numNodes; ++i)
   {
-    Node* current_node = category_tree->get_node(i);
+    CategoryNode* current_node = category_tree->get_node(i);
 
     container[vboIdx++] = current_node->_x; // node x
     container[vboIdx++] = current_node->_y; // node y
@@ -191,10 +191,10 @@ DetailRenderer::fill_vbo_edges()
 
   for (unsigned i = 0; i != numEdges; ++i)
   {
-    Edge* current_edge = category_tree->get_edge(i);
+    CategoryEdge* current_edge = category_tree->get_edge(i);
 
-    Node* source = current_edge->getSource();
-    Node* target = current_edge->getTarget();
+    CategoryNode* source = current_edge->getSource();
+    CategoryNode* target = current_edge->getTarget();
 
     container[vboIdx++] = source->_x; // source x
     container[vboIdx++] = source->_y; // source y
@@ -273,11 +273,23 @@ DetailRenderer::display()
   }
   _modelMatrixStack.pop();
 
-
-  // LABEL NODES
-  for (unsigned i = 0; i != category_tree->get_node_num(); ++i)
+  if (_graph->get_category_tree()->_highlight_mode)
   {
-    Node* current_node = category_tree->get_node(i);
+    label_nodes(_graph->get_category_tree()->get_highlighted_nodes());
+  }
+  else
+  {
+    label_nodes(_graph->get_category_tree()->get_all_nodes());
+  }
+}
+
+
+void
+DetailRenderer::label_nodes(std::vector<CategoryNode*> const& nodes)
+{
+  for (unsigned i = 0; i != nodes.size(); ++i)
+  {
+    CategoryNode* current_node = nodes[i];
 
     gloost::Vector3 text_position(current_node->_x, current_node->_y, 0.0);
 
@@ -320,6 +332,7 @@ DetailRenderer::display()
     glPopMatrix();
   }
 }
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

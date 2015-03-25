@@ -9,36 +9,72 @@ namespace vta
 {
 
   struct Node;
+  struct ArticleNode;
+  struct CategoryNode;
 
   class Edge
   {
     public:
       // Class constructor
-      Edge(long, Node*, Node*, double);
+      Edge(double);
 
       // Class destructor
       ~Edge();
 
-      // Get Edge index
-      long getIndex() const;
-
-      // Get source and target node
-      Node* getSource() const;
-      Node* getTarget() const;
-
       // Get edge weight
       double getWeight() const;
+
+    private:
+      // Weight
+      double _weight;
+  };
+
+
+  class ArticleEdge : Edge
+  {
+    public:
+      // Class constructor
+      ArticleEdge(ArticleNode*, ArticleNode*, double);
+
+      // Get edge weight
+      virtual double getWeight() const;
+
+      // Get source and target node
+      ArticleNode* getSource() const;
+      ArticleNode* getTarget() const;
 
       // Color
       float _color[3];
 
     private:
-      long _index;
       // Nodes
-      Node* _source;
-      Node* _target;
-      // Weight
-      double _weight;
+      ArticleNode* _source;
+      ArticleNode* _target;
+
+  };
+
+
+  class CategoryEdge : Edge
+  {
+    public:
+      // Class constructor
+      CategoryEdge(CategoryNode*, CategoryNode*, double);
+
+      // Get edge weight
+      virtual double getWeight() const;
+
+      // Get source and target node
+      CategoryNode* getSource() const;
+      CategoryNode* getTarget() const;
+
+      // Color
+      float _color[3];
+
+    private:
+      // Nodes
+      CategoryNode* _source;
+      CategoryNode* _target;
+
   };
 
 

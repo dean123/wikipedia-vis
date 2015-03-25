@@ -21,7 +21,7 @@ Cluster::add_node(ArticleNode* node)
 }
 
 void
-Cluster::add_edge(Edge* edge)
+Cluster::add_edge(ArticleEdge* edge)
 {
   _edges.push_back(edge);
 }
@@ -34,7 +34,7 @@ Cluster::get_node(unsigned index)
 }
 
 
-Edge*
+ArticleEdge*
 Cluster::get_edge(unsigned index)
 {
   return _edges[index];
@@ -248,11 +248,11 @@ Cluster::create_default_cluster()
 //    ArticleNode* source = _nodes[i];
 //    ArticleNode* target = _nodes[i+1];
 //
-//    Edge* new_edge = new Edge(i, source, target, 0.5);
+//    ArticleEdge* new_edge = new Edge(i, source, target, 0.5);
 //
 //    // Push Edge to outgoing and incoming edges of its nodes
-//    source->outgoingEdges.push_back(new_edge);
-//    target->incomingEdges.push_back(new_edge);
+//    source->_outgoingEdges.push_back(new_edge);
+//    target->_incomingEdges.push_back(new_edge);
 //  }
 }
 
@@ -268,11 +268,11 @@ Cluster::get_max_edge_weight(ArticleNode* v1)
 {
   double max_edge_weight = 0.0;
 
-  for(unsigned i_edge = 0; i_edge != v1->outgoingEdges.size(); ++i_edge)
-    max_edge_weight = std::max(v1->outgoingEdges[i_edge]->getWeight(), max_edge_weight);
+  for(unsigned i_edge = 0; i_edge != v1->_outgoingEdges.size(); ++i_edge)
+    max_edge_weight = std::max(v1->_outgoingEdges[i_edge]->getWeight(), max_edge_weight);
 
-  for(unsigned i_edge = 0; i_edge != v1->incomingEdges.size(); ++i_edge)
-    max_edge_weight = std::max(v1->incomingEdges[i_edge]->getWeight(), max_edge_weight);
+  for(unsigned i_edge = 0; i_edge != v1->_incomingEdges.size(); ++i_edge)
+    max_edge_weight = std::max(v1->_incomingEdges[i_edge]->getWeight(), max_edge_weight);
 
   return max_edge_weight;
 }
@@ -282,11 +282,11 @@ Cluster::get_min_edge_weight(ArticleNode* v1)
 {
   double min_edge_weight = 1.1;
 
-  for(unsigned i_edge = 0; i_edge != v1->outgoingEdges.size(); ++i_edge)
-    min_edge_weight = std::min(v1->outgoingEdges[i_edge]->getWeight(), min_edge_weight);
+  for(unsigned i_edge = 0; i_edge != v1->_outgoingEdges.size(); ++i_edge)
+    min_edge_weight = std::min(v1->_outgoingEdges[i_edge]->getWeight(), min_edge_weight);
 
-  for(unsigned i_edge = 0; i_edge != v1->incomingEdges.size(); ++i_edge)
-    min_edge_weight = std::min(v1->incomingEdges[i_edge]->getWeight(), min_edge_weight);
+  for(unsigned i_edge = 0; i_edge != v1->_incomingEdges.size(); ++i_edge)
+    min_edge_weight = std::min(v1->_incomingEdges[i_edge]->getWeight(), min_edge_weight);
 
   return min_edge_weight;
 }
@@ -297,15 +297,15 @@ Cluster::get_average_edge_weight(ArticleNode* v1)
   double sum_edge_weight = 0.0;
   unsigned num_of_edges = 0;
 
-  for(unsigned i_edge = 0; i_edge != v1->outgoingEdges.size(); ++i_edge)
+  for(unsigned i_edge = 0; i_edge != v1->_outgoingEdges.size(); ++i_edge)
   {
-    sum_edge_weight += v1->outgoingEdges[i_edge]->getWeight();
+    sum_edge_weight += v1->_outgoingEdges[i_edge]->getWeight();
     num_of_edges++;
   }
 
-  for(unsigned i_edge = 0; i_edge != v1->incomingEdges.size(); ++i_edge)
+  for(unsigned i_edge = 0; i_edge != v1->_incomingEdges.size(); ++i_edge)
   {
-    sum_edge_weight += v1->incomingEdges[i_edge]->getWeight();
+    sum_edge_weight += v1->_incomingEdges[i_edge]->getWeight();
     num_of_edges++;
   }
 

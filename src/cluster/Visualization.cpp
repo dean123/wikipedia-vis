@@ -30,7 +30,10 @@ Visualization::Visualization()
   _cluster_size(0),
 
   _article_index(1),
-  _wikidb("/media/HDD/wikipedia-db/pages")
+  _wikidb("/media/HDD/wikipedia-db/pages"),
+
+  _max_x(0.0),
+  _max_y(0.0)
 {
   _category_tree = new CategoryTree();
 }
@@ -85,19 +88,19 @@ Visualization::create_category_node(long index, std::string const label, Categor
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-  \brief   Create a EDGE and push pointer to edge vector
+  \brief   Create a Article Edge
   \remarks ...
 */
 
-Edge*
-Visualization::create_edge(Node* source, Node* target, double weight)
+ArticleEdge*
+Visualization::create_article_edge(ArticleNode* source, ArticleNode* target, double weight)
 {
-  Edge* newEdge = new Edge(_edges.size(), source, target, weight);
+  ArticleEdge* newEdge = new ArticleEdge(source, target, weight);
 
   _edges.push_back(newEdge);
 
-  source->outgoingEdges.push_back(newEdge);
-  target->incomingEdges.push_back(newEdge);
+  source->_outgoingEdges.push_back(newEdge);
+  target->_incomingEdges.push_back(newEdge);
 
   return newEdge;
 }
@@ -106,14 +109,33 @@ Visualization::create_edge(Node* source, Node* target, double weight)
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-  \brief   Get pointer to EDGE by vector index
+  \brief   Create a EDGE and push pointer to edge vector
   \remarks ...
 */
 
-Edge*
-Visualization::get_edge_by_index(long index)
+CategoryEdge*
+Visualization::create_category_edge(CategoryNode* source, CategoryNode* target, double weight)
 {
-  return _edges[index];
+  CategoryEdge* newEdge = new CategoryEdge(source, target, weight);
+
+  source->_outgoingEdges.push_back(newEdge);
+  target->_incomingEdges.push_back(newEdge);
+
+  return newEdge;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Get node vector
+  \remarks ...
+*/
+
+std::vector<ArticleNode*>
+Visualization::get_nodes()
+{
+  return _nodes;
 }
 
 
@@ -124,10 +146,10 @@ Visualization::get_edge_by_index(long index)
   \remarks ...
 */
 
-ArticleNode*
-Visualization::get_node_by_index(long index)
+std::vector<ArticleEdge*>
+Visualization::get_edges()
 {
-  return _nodes[index];
+  return _edges;
 }
 
 
@@ -184,6 +206,27 @@ Cluster*
 Visualization::get_cluster_by_index(unsigned index)
 {
   return _clusters[index];
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Get Visualization boundaries
+  \remarks ...
+*/
+
+double
+Visualization::get_max_x() const
+{
+  return _max_x;
+}
+
+
+double
+Visualization::get_max_y() const
+{
+  return _max_y;
 }
 
 
@@ -262,7 +305,7 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
     }
 
 
-    Edge* new_edge = create_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
+    ArticleEdge* new_edge = create_article_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
 
 //    if (similarity > 0.8)
       current_cluster->add_edge(new_edge);
@@ -381,12 +424,20 @@ Visualization::set_cluster_positions()
 
     // Set position for the next cluster
     position_x += (radius * 2) + radius/2;
+
+    _max_x = std::max(_max_x, position_x);
+
     if (i_cluster % _clusters_per_row == _clusters_per_row-1) // _cluster_per_row inital 20
     {
       position_x = radius;
       position_y += (radius * 2) + radius/2;
+
+      _max_y = std::max(_max_y, position_y);
     }
   }
+
+  _max_x += radius;
+  _max_y += radius;
 }
 
 
@@ -416,7 +467,8 @@ Visualization::build_category_tree(Cluster* cluster)
 {
   std::cout << "Build category tree for " << cluster->get_node_num() << " nodes." << std::endl;
 
-  std::vector<uint32_t> indirect_parents;
+  std::vector<uint32_t> all_parents;
+  std::vector<uint32_t> similar_parents;
 
   // Get all parents of all articles in this cluster
   for (unsigned i_node = 0; i_node != cluster->get_node_num(); ++i_node)
@@ -447,37 +499,99 @@ Visualization::build_category_tree(Cluster* cluster)
 //          _index2categoryNode[parent_parent.index] = create_node(parent_parent.index,parent_parent.title, article);
 //          _category_tree->add_node(_index2categoryNode[parent_parent.index]);
 
-          Edge* new_edge = create_edge(_index2categoryNode[parent_parent.index],
-                                       _index2categoryNode[parent.index], 0.9);
+          CategoryEdge* new_edge = create_category_edge(_index2categoryNode[parent_parent.index],
+                                                        _index2categoryNode[parent.index], 0.9);
           _category_tree->add_edge(new_edge);
         }
-//        else
-//        {
-//          // in category vector pushen und checken ob es den schon gibt
-//          bool indirect_parents_contains = false;
-//
-//          for (unsigned k = 0; k != indirect_parents.size(); ++k)
-//          {
-//            if(indirect_parents[k] == parent_parents[j])
-//            {
-//              indirect_parents_contains == true;
-//              break;
-//            }
-//
-//            if (indirect_parents_contains)
-//            {
-//              // Zwei haben gemeinsamen Parent
-//              _index2categoryNode[indirect_parents[k]] = create_category_node(parent.index,parent.title, parent);
-//              _category_tree->add_node(_index2categoryNode[parent.index]);
-//            }
-//          }
-//
-//        }
+        else
+        {
+          bool allread_in_vec = false;
+          for (unsigned k = 0; k != all_parents.size(); ++k)
+          {
+            if (all_parents[k] == parent_parents[j])
+            {
+              // Dieser Parent hat mehrere Children
+              std::cout << parent_parent.title << std::endl;
+
+              allread_in_vec = true;
+
+              if(!cat_map_contains_id(parent_parent.index))
+              {
+                _index2categoryNode[parent_parent.index] = create_category_node(all_parents[k], parent_parent.title, parent_parent);
+                similar_parents.push_back(parent_parent.index);
+              }
+
+              break;
+            }
+          }
+
+          if (!allread_in_vec)
+          {
+            all_parents.push_back(parent_parent.index);
+          }
+        }
       }
     }
   }
 
+//
+//  for (unsigned i = 0; i != similar_parents.size(); ++i)
+//  {
+//    CategoryNode* cat_node = _index2categoryNode[similar_parents[i]];
+//
+//  std::map<uint32_t,CategoryNode*>::iterator it = _index2categoryNode.find(id);
+//
+//  if(it != _index2categoryNode.end())
+//  {
+//   return true;
+//  }
+//  return false;
+//  }
+
   _category_tree->make_category_tree_layout();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Set the hihglighted nodes and edges for the category tree
+  \remarks
+*/
+
+void
+Visualization::set_highlighted_categories(ArticleNode* article_node)
+{
+  _category_tree->_highlight_mode = true;
+
+  Article article = article_node->_article;
+
+  std::vector<uint32_t> parents = article.getParents();
+
+  for (unsigned i = 0; i != parents.size(); ++i)
+  {
+    Category parent = _wikidb.getCategory(parents[i]);
+
+    CategoryNode* cat_node = _index2categoryNode[parent.index];
+
+    _category_tree->add_highlighted_node(cat_node);
+
+
+    for (unsigned j = 0; j != cat_node->_outgoingEdges.size(); ++j)
+    {
+      CategoryNode* cat_parent_node = cat_node->_outgoingEdges[j]->getTarget();
+
+      _category_tree->add_highlighted_node(cat_parent_node);
+      _category_tree->add_highlighted_edge(cat_node->_outgoingEdges[j]);
+
+    }
+  }
+}
+
+void
+Visualization::reset_highlighted_categories()
+{
+  _category_tree->_highlight_mode = false;
+  _category_tree->clear_highlighting();
 }
 
 

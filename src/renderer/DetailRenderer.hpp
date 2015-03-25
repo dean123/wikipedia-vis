@@ -52,6 +52,9 @@ namespace vta
       // display
       void display();
 
+      // label nodes
+      void label_nodes(std::vector<CategoryNode*> const&);
+
       // resize
       void resize(int width, int height);
 

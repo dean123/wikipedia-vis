@@ -50,8 +50,8 @@ class OverviewRenderer
     void create_cluster_edge_vbo(Cluster*);
 
     // Fill vbo's with nodes and edges
-    void fill_vbo_nodes();
-    void fill_vbo_edges();
+    void fill_vbo_nodes(std::vector<ArticleNode*> const&);
+    void fill_vbo_edges(std::vector<ArticleEdge*> const&);
 
     // Draw nodes and edges (node-color, edge-color)
     void draw_nodes_and_edges(gloost::vec4, gloost::vec4);
@@ -67,6 +67,9 @@ class OverviewRenderer
 
     // Get Cluster index from mouse position
     unsigned get_cluster_index_from_mouse_pos(gloost::Vector3);
+
+    // Hightlight nodes and all corresponding edges
+    void highlight_node(ArticleNode* current_node);
 
     // mouse input
     void mousePress(int x, int y, int btn, int mods);
@@ -138,7 +141,7 @@ class OverviewRenderer
     std::shared_ptr<gloost::FreeTypeWriter> _typeWriter;
 
     // Toggle if nodes should be highlighted at mouse over
-    bool _highlight_at_mouse_over;
+    bool _highlight_mode;
 
     // Vector with all cluster vbos
     std::vector < std::shared_ptr<gloost::gl::Vbo4> > _cluster_node_vbo;
