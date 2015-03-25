@@ -17,6 +17,9 @@ namespace vta
       void add_node(ArticleNode*);
       void add_edge(ArticleEdge*);
 
+      // Merge two clusters
+      void merge_clusters(Cluster*);
+
       // Get node with index
       ArticleNode* get_node(unsigned);
       ArticleEdge* get_edge(unsigned);
@@ -53,6 +56,7 @@ namespace vta
       // Nodes and edges of cluster
       std::vector<ArticleNode*> _nodes;
       std::vector<ArticleEdge*> _edges;
+
       // Cluster position
       double _position_x;
       double _position_y;

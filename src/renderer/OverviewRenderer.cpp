@@ -446,10 +446,10 @@ OverviewRenderer::display()
         _typeWriter->nextLine();
         _typeWriter->writeLine(10.0, _height - 30.0, "Minimum similarity: " + boost::lexical_cast<std::string>(_min_similarity));
 
-        _typeWriter->nextLine();
-        _typeWriter->writeLine(10.0, _height - 40.0, "Number of nodes: " + boost::lexical_cast<std::string>(_graph->get_node_num()));
-        _typeWriter->nextLine();
-        _typeWriter->writeLine(10.0, _height - 50.0, "Number of edges: " + boost::lexical_cast<std::string>(_graph->get_edge_num()));
+//        _typeWriter->nextLine();
+//        _typeWriter->writeLine(10.0, _height - 40.0, "Number of nodes: " + boost::lexical_cast<std::string>(_graph->get_node_num()));
+//        _typeWriter->nextLine();
+//        _typeWriter->writeLine(10.0, _height - 50.0, "Number of edges: " + boost::lexical_cast<std::string>(_graph->get_edge_num()));
       }
       _typeWriter->endText();
     }
@@ -690,11 +690,7 @@ OverviewRenderer::mousePress(int x, int y, int btn, int mods)
       if (!clicked_on_node && _highlight_mode)
       {
         // Fill vbos with new positions
-        std::vector<ArticleNode*> drawable_nodes = _graph->get_nodes();
-        std::vector<ArticleEdge*> drawable_edges = _graph->get_edges();
-
-        fill_vbo_nodes(drawable_nodes);
-        fill_vbo_edges(drawable_edges);
+        fill_vbos();
 
         _highlight_mode = false;
         _graph->reset_highlighted_categories();

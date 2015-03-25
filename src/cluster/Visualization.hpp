@@ -57,18 +57,11 @@ namespace vta
       virtual ~Visualization();
 
       // Create Nodes and Edges for articles
-      ArticleNode* create_article_node (long, std::string const, Article);
+      ArticleNode* create_article_node (Article);
       ArticleEdge* create_article_edge(ArticleNode*, ArticleNode*, double);
       // Create nodes and edges for categorys
-      CategoryNode* create_category_node(long, std::string const, Category);
+      CategoryNode* create_category_node(Category);
       CategoryEdge* create_category_edge(CategoryNode*, CategoryNode*, double);
-
-      int get_node_num() const; // replace durch unsigned counter?
-      int get_edge_num() const; // replace durch unsigned counter?
-
-      // Get all nodes and edges
-      std::vector<ArticleNode*> get_nodes();
-      std::vector<ArticleEdge*> get_edges();
 
       // Cluster getter
       unsigned get_cluster_num() const;
@@ -106,8 +99,6 @@ namespace vta
       void reset_highlighted_categories();
 
     private:
-      std::vector<ArticleNode*> _nodes;
-      std::vector<ArticleEdge*> _edges;
 
       std::map<uint32_t,ArticleNode*> _index2articleNode;
       std::map<uint32_t,CategoryNode*> _index2categoryNode;

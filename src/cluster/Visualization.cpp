@@ -17,9 +17,6 @@ Visualization::Visualization()
 :
   _detail_view_cluster_index(0),
 
-  _nodes(),
-  _edges(),
-
   _index2articleNode(),
   _index2categoryNode(),
 
@@ -59,11 +56,9 @@ Visualization::~Visualization()
 */
 
 ArticleNode*
-Visualization::create_article_node(long index, std::string const label, Article article)
+Visualization::create_article_node(Article article)
 {
-  ArticleNode* newNode = new ArticleNode(index, label, article);
-
-  _nodes.push_back(newNode);
+  ArticleNode* newNode = new ArticleNode(article);
 
   return newNode;
 }
@@ -77,9 +72,9 @@ Visualization::create_article_node(long index, std::string const label, Article 
 */
 
 CategoryNode*
-Visualization::create_category_node(long index, std::string const label, Category category)
+Visualization::create_category_node(Category category)
 {
-  CategoryNode* newNode = new CategoryNode(index, label, category);
+  CategoryNode* newNode = new CategoryNode(category);
 
   return newNode;
 }
@@ -96,8 +91,6 @@ ArticleEdge*
 Visualization::create_article_edge(ArticleNode* source, ArticleNode* target, double weight)
 {
   ArticleEdge* newEdge = new ArticleEdge(source, target, weight);
-
-  _edges.push_back(newEdge);
 
   source->_outgoingEdges.push_back(newEdge);
   target->_incomingEdges.push_back(newEdge);
@@ -122,62 +115,6 @@ Visualization::create_category_edge(CategoryNode* source, CategoryNode* target, 
   target->_incomingEdges.push_back(newEdge);
 
   return newEdge;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
-  \brief   Get node vector
-  \remarks ...
-*/
-
-std::vector<ArticleNode*>
-Visualization::get_nodes()
-{
-  return _nodes;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
-  \brief   Get pointer to NODE by vector index
-  \remarks ...
-*/
-
-std::vector<ArticleEdge*>
-Visualization::get_edges()
-{
-  return _edges;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
-  \brief   Get number of NODES
-  \remarks ...
-*/
-
-int
-Visualization::get_node_num() const
-{
-  return _nodes.size();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
-  \brief   Get number of EDGES
-  \remarks ...
-*/
-
-int
-Visualization::get_edge_num() const
-{
-  return _edges.size();
 }
 
 
@@ -274,13 +211,9 @@ Visualization::cat_map_contains_id(int id)
 void
 Visualization::visit_article(Article article, Cluster* current_cluster)
 {
-  if(!article_map_contains_id(article.index))
-  {
-    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
-    current_cluster->add_node(_index2articleNode[article.index]);
-  }
-
   std::vector<SimPair> comparisons = article.getComparisons();
+
+  std::vector<Article> article_queue;
 
   for(unsigned k = 0; k < comparisons.size(); ++k)
   {
@@ -288,40 +221,78 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
 
     uint32_t index = current_sim_pair.getIndex();
 
-    Article article2 = _wikidb.getArticle(index);
+    Article comparison_article = _wikidb.getArticle(index);
 
     uint32_t sim = current_sim_pair.getSim();
 
     double similarity = sim;
     similarity = similarity / 1000;
 
-
-    if (!article_map_contains_id(index))
-    {
-      _index2articleNode[index] = create_article_node(index, article2.title, article2);
-
-      if (similarity > 0.8)
-        current_cluster->add_node(_index2articleNode[index]);
-    }
-
-    ArticleEdge* new_edge = create_article_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
-
-    new_edge->_color[0] = 0.0f;
-    new_edge->_color[1] = 0.0f;
-    new_edge->_color[2] = similarity;
-
     if (similarity > 0.8)
     {
+      if (!article_map_contains_id(index))
+      {
+        _index2articleNode[index] = create_article_node(comparison_article);
+        current_cluster->add_node(_index2articleNode[index]);
+      }
+
+      else
+      {
+        Cluster* merge_cluster = new Cluster();
+
+        for (unsigned i = 0; i != _clusters.size(); ++i)
+        {
+          std::vector<ArticleNode*> cluster_nodes = _clusters[i]->get_nodes();
+
+          for (unsigned j = 0; j != cluster_nodes.size(); ++j)
+          {
+            if (cluster_nodes[j]->_index == index)
+            {
+              merge_cluster = _clusters[i];
+              break;
+            }
+          }
+        }
+
+        std::cout << merge_cluster->get_node_num() << std::endl;
+
+        current_cluster->merge_clusters(merge_cluster);
+      }
+
+
+      ArticleEdge* new_edge = create_article_edge(_index2articleNode[article.index],
+                                                  _index2articleNode[index],
+                                                  similarity);
+
+      new_edge->_color[0] = 0.0f;
+      new_edge->_color[1] = 0.0f;
+      new_edge->_color[2] = similarity;
+
       current_cluster->add_edge(new_edge);
 
       if (!_index2articleNode[index]->_visited)
       {
         _index2articleNode[index]->_visited = true;
-
-        visit_article(article2, current_cluster);
+        visit_article(comparison_article, current_cluster);
       }
     }
+    else
+    {
+      break;
+    }
   }
+
+//      if (!_index2articleNode[index]->_visited)
+//      {
+//        article_queue.push_back(comparison_article);
+//      }
+//  for (unsigned i = 0; i != article_queue.size(); ++i)
+//  {
+//    Article comparison_article = article_queue[i];
+//
+//    _index2articleNode[comparison_article.index]->_visited = true;
+//    visit_article(comparison_article, current_cluster);
+//  }
 }
 
 
@@ -329,38 +300,38 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
 void
 Visualization::get_next_cluster()
 {
-  Cluster* current_cluster = new Cluster();
-
-  Article article = _wikidb.getArticle(_article_index);
-
-  if(!article_map_contains_id(article.index))
+  if (_article_index > _wikidb.sizeArticles())
   {
-    _index2articleNode[article.index] = create_article_node(article.index,article.title, article);
-    current_cluster->add_node(_index2articleNode[article.index]);
-  }
-
-  if (!_index2articleNode[article.index]->_visited)
-  {
-    _index2articleNode[article.index]->_visited = true;
-    visit_article(article, current_cluster);
-  }
-
-  current_cluster->set_radius(2000.0);
-  current_cluster->set_position(_article_index * 200.0, 0.0);
-  current_cluster->make_radial_layout();
-
-  if (current_cluster->get_node_num() != 0)
-  {
-    std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
-
-    _clusters.push_back(current_cluster);
-    _article_index++;
+    std::cout << "All nodes created" << std::endl;
   }
 
   else
   {
-    _article_index++;
-    get_next_cluster();
+    Article article = _wikidb.getArticle(_article_index);
+
+    if(article_map_contains_id(article.index))
+    {
+      _article_index++;
+      get_next_cluster();
+    }
+
+    else
+    {
+      Cluster* current_cluster = new Cluster();
+
+      // Create node and add it to the new cluster
+      _index2articleNode[article.index] = create_article_node(article);
+      current_cluster->add_node(_index2articleNode[article.index]);
+
+      // Visit the node and all neighbors
+      _index2articleNode[article.index]->_visited = true;
+      visit_article(article, current_cluster);
+
+      _clusters.push_back(current_cluster);
+      _article_index++;
+
+      std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
+    }
   }
 }
 
@@ -546,7 +517,7 @@ Visualization::build_category_tree(Cluster* cluster)
 
       if(!cat_map_contains_id(parent.index))
       {
-        _index2categoryNode[parent.index] = create_category_node(parent.index,parent.title, parent);
+        _index2categoryNode[parent.index] = create_category_node(parent);
         _category_tree->add_node(_index2categoryNode[parent.index]);
       }
 

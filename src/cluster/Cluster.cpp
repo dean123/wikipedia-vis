@@ -11,6 +11,7 @@ Cluster::Cluster()
 Cluster::~Cluster()
 {
   _nodes.clear();
+  _edges.clear();
 }
 
 
@@ -24,6 +25,25 @@ void
 Cluster::add_edge(ArticleEdge* edge)
 {
   _edges.push_back(edge);
+}
+
+
+void
+Cluster::merge_clusters(Cluster* cluster)
+{
+  std::vector<ArticleNode*> cluster_nodes = cluster->get_nodes();
+  for (unsigned j = 0; j != cluster_nodes.size(); ++j)
+    _nodes.push_back(cluster_nodes[j]);
+
+
+  std::vector<ArticleEdge*> cluster_edges = cluster->get_edges();
+  for (unsigned j = 0; j != cluster_edges.size(); ++j)
+    _edges.push_back(cluster_edges[j]);
+
+//  _nodes.insert(_nodes.end(), cluster->get_nodes().begin(), cluster->get_nodes().end());
+//  _edges.insert(_edges.end(), cluster->get_edges().begin(), cluster->get_edges().end());
+
+  cluster->~Cluster();
 }
 
 

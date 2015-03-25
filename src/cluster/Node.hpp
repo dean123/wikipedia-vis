@@ -50,8 +50,8 @@ namespace vta
   struct ArticleNode : Node
   {
     // Class constructor
-    ArticleNode(uint32_t index, std::string title, Article article)
-    : Node(index, title), _article(article), _outgoingEdges(), _incomingEdges()
+    ArticleNode(Article article)
+    : Node(article.index, article.title), _article(article), _outgoingEdges(), _incomingEdges()
     {}
 
     unsigned getDegree() const;
@@ -66,8 +66,8 @@ namespace vta
 
   struct CategoryNode : Node
   {
-    CategoryNode(uint32_t index, std::string title, Category category)
-    : Node(index, title), _category(category), _outgoingEdges(), _incomingEdges()
+    CategoryNode(Category category)
+    : Node(category.index, category.title), _category(category), _outgoingEdges(), _incomingEdges()
     {}
 
     unsigned getDegree() const;
