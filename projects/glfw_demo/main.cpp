@@ -317,14 +317,14 @@ int main(int argc, char *argv[])
   ImVec4 clear_color = ImColor(114, 144, 154);
 
   // Similairty thresholds
-  float min_similarity = 0.82;
-  float max_similarity = 1.02;
+  float min_similarity = 0.90;
+  float max_similarity = 1.00;
 
   // Blacklist
   char* buf = new char [256];
   int* num_of_clusters = new int(1);
 
-  overview_renderer->get_next_cluster(30);
+  overview_renderer->get_next_cluster(20);
 
   // Main loop
   while (!glfwWindowShouldClose(imgui_window))

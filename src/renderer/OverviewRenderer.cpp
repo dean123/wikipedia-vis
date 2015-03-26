@@ -55,7 +55,9 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _modelMatrixStack(),
 
   _translateVector(0.0, 0.0, 0.0),
-  _scaleVector(0.005, 0.005, 1.0),
+  _oldTranslateVector(0.0, 0.0, 0.0),
+  _scaleVector(1.0, 1.0, 1.0),
+  _oldScaleVector(1.0, 1.0, 1.0),
 
   _mouse_pos(0.0, 0.0, 0.0),
 
@@ -81,7 +83,10 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _cluster_edge_vbo(),
 
   _num_clusters_on_screen(0),
-  _cluster_detail_view(false)
+  _cluster_detail_view(false),
+
+  _num_nodes(0),
+  _num_edges(0)
 {
 
   // create TypeWriter
@@ -135,19 +140,6 @@ OverviewRenderer::initialize()
 {
   std::cout << "Number of clusters: " << _graph->get_cluster_num() << std::endl;
 
-  for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
-  {
-    Cluster* current_cluster = _graph->get_cluster_by_index(i);
-
-    // Initial layout
-    current_cluster->make_radial_layout();
-
-//    create_cluster_node_vbo(current_cluster);
-//    create_cluster_edge_vbo(current_cluster);
-  }
-
-  std::cout << "Number of cluster vbos: " << _cluster_node_vbo.size() << std::endl;
-
   // create shader program and attach all components
   _edgeShader = gloost::gl::ShaderProgram::create();
   _edgeShader->attachShader(GLOOST_SHADERPROGRAM_VERTEX_SHADER,   "../../shaders/edge.vs");
@@ -173,16 +165,26 @@ OverviewRenderer::fill_vbos()
   std::vector<ArticleNode*> drawable_nodes;
   std::vector<ArticleEdge*> drawable_edges;
 
+  _num_nodes = 0;
+  _num_edges = 0;
+
 
   for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
   {
     // Add all nodes
     std::vector<ArticleNode*> cluster_nodes = _graph->get_cluster_by_index(i)->get_nodes();
+
+    if (cluster_nodes.size() > 1)
+      _num_nodes += cluster_nodes.size();
+
     for (unsigned j = 0; j != cluster_nodes.size(); ++j)
       drawable_nodes.push_back(cluster_nodes[j]);
 
     // Add all edges
     std::vector<ArticleEdge*> cluster_edges = _graph->get_cluster_by_index(i)->get_edges();
+
+    _num_edges += cluster_edges.size();
+
     for (unsigned j = 0; j != cluster_edges.size(); ++j)
     {
       double similarity = cluster_edges[j]->getWeight();
@@ -342,15 +344,26 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
     }
     else
     {
-//      _modelMatrixStack.translate(-_graph->get_max_x() / 2, -_graph->get_max_y() / 2, 0.0);
+      auto mouseMatrixStack = gloost::MatrixStack();
+      mouseMatrixStack.clear();
+      mouseMatrixStack.push();
 
-//      _modelMatrixStack.translate(_translateVector[0] * _scaleVector[0], _translateVector[1] * _scaleVector[1], 0.0);
+      mouseMatrixStack.scale(_scaleVector);
 
-//      _modelMatrixStack.translate(_mouse_pos);
+      gloost::Vector3 translate = mouseMatrixStack.top() * _translateVector;
+
+
+      _modelMatrixStack.translate((float)_width/2, (float)_height/2, 0.0);
+
+
+      _modelMatrixStack.translate(translate);
+
+
       _modelMatrixStack.scale(_scaleVector);
 
 
       _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top())); // set current model view matrix
+      mouseMatrixStack.pop();
     }
 
     _edgeShader->use();
@@ -442,14 +455,12 @@ OverviewRenderer::display()
       _typeWriter->beginText();
       {
         glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-        _typeWriter->writeLine(10.0, _height - 20.0, "Maximum similarity: " + boost::lexical_cast<std::string>(_max_similarity));
         _typeWriter->nextLine();
-        _typeWriter->writeLine(10.0, _height - 30.0, "Minimum similarity: " + boost::lexical_cast<std::string>(_min_similarity));
-
-//        _typeWriter->nextLine();
-//        _typeWriter->writeLine(10.0, _height - 40.0, "Number of nodes: " + boost::lexical_cast<std::string>(_graph->get_node_num()));
-//        _typeWriter->nextLine();
-//        _typeWriter->writeLine(10.0, _height - 50.0, "Number of edges: " + boost::lexical_cast<std::string>(_graph->get_edge_num()));
+        _typeWriter->writeLine(10.0, _height - 20.0, "Number of nodes: " + boost::lexical_cast<std::string>(_num_nodes));
+        _typeWriter->nextLine();
+        _typeWriter->writeLine(10.0, _height - 50.0, "Number of edges: " + boost::lexical_cast<std::string>(_num_edges));
+        _typeWriter->nextLine();
+        _typeWriter->writeLine(10.0, _height - 90.0, "Number of clusters: " + boost::lexical_cast<std::string>(_graph->get_cluster_num()));
       }
       _typeWriter->endText();
     }
@@ -701,16 +712,59 @@ OverviewRenderer::mousePress(int x, int y, int btn, int mods)
 
     else /// Click on clusters
     {
-      unsigned cluster_idx = get_cluster_index_from_mouse_pos(mouse_position);
-      if (cluster_idx < _graph->get_cluster_num()) // mouse pos is inside graph bounding
-      {
-        _graph->_detail_view_cluster_index = cluster_idx;
+      Cluster* test_cluster = _graph->get_cluster_by_index(0);
 
-        _cluster_detail_view = true;
+      double cluster_x = test_cluster->get_position_x();
+      double cluster_y = test_cluster->get_position_y();
 
-        // Set Category tree
-        _graph->build_category_tree(_graph->get_cluster_by_index(cluster_idx));
-      }
+      double radius = test_cluster->get_radius();
+
+      auto pMin = gloost::Point3(cluster_x - radius, cluster_y - radius, 0.0);
+      auto pMax = gloost::Point3(cluster_x + radius, cluster_y + radius, 0.0);
+
+      gloost::BoundingBox test_box;
+      test_box.setPMin(pMin);
+      test_box.setPMax(pMin);
+
+
+      auto mouseMatrixStack = gloost::MatrixStack();
+      mouseMatrixStack.clear();
+      mouseMatrixStack.push();
+
+      mouseMatrixStack.scale(_scaleVector);
+
+      gloost::Vector3 translate = mouseMatrixStack.top() * _translateVector;
+
+      _modelMatrixStack.scale(_scaleVector);
+
+      _modelMatrixStack.translate(translate);
+
+      _modelMatrixStack.translate((float)_width/2, (float)_height/2, 0.0);
+
+
+
+      mouse_position = _modelMatrixStack.top().inverted() * mouse_position;
+
+
+      mouseMatrixStack.pop();
+      _modelMatrixStack.pop();
+
+
+      std::cout << mouse_position << std::endl;
+
+      std::cout << cluster_x << "   " << cluster_y << std::endl;
+
+
+//      unsigned cluster_idx = get_cluster_index_from_mouse_pos(mouse_position);
+//      if (cluster_idx < _graph->get_cluster_num()) // mouse pos is inside graph bounding
+//      {
+//        _graph->_detail_view_cluster_index = cluster_idx;
+//
+//        _cluster_detail_view = true;
+//
+//        // Set Category tree
+//        _graph->build_category_tree(_graph->get_cluster_by_index(cluster_idx));
+//      }
     }
   }
 }
@@ -756,9 +810,11 @@ OverviewRenderer::mouseMove(int x, int y)
   {
     if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
     {
+      _oldTranslateVector = _translateVector;
+
       gloost::Vector3 mouse_drag = _mouseState.getSpeed();
 
-      _translateVector += gloost::Vector3(mouse_drag[0], mouse_drag[1], 0.0);
+      _translateVector += gloost::Vector3(mouse_drag[0] * 1/_scaleVector[0], mouse_drag[1] * 1/_scaleVector[1], 0.0);
     }
   }
 }
@@ -777,6 +833,8 @@ OverviewRenderer::mouseScrollEnhance()
 {
   if (!_cluster_detail_view)
   {
+    _oldScaleVector = _scaleVector;
+
     // Zoom in
     _scaleVector[0] = _scaleVector[0] * 1.1;
     _scaleVector[1] = _scaleVector[1] * 1.1;
@@ -790,6 +848,8 @@ OverviewRenderer::mouseScrollDecrease()
 {
   if (!_cluster_detail_view)
   {
+    _oldScaleVector = _scaleVector;
+
     // Zoom out
     _scaleVector[0] = _scaleVector[0] * 0.8;
     _scaleVector[1] = _scaleVector[1] * 0.8;

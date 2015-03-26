@@ -116,7 +116,10 @@ class OverviewRenderer
 
     // Panning and Zooming
     gloost::Vector3 _translateVector;
+    gloost::Vector3 _oldTranslateVector;
     gloost::Vector3 _scaleVector;
+    gloost::Vector3 _oldScaleVector;
+
     // Mouse Position for scaling
     gloost::Point3 _mouse_pos;
 
@@ -157,6 +160,10 @@ class OverviewRenderer
 
     // Toggle if a cluster is currently at detail view
     bool _cluster_detail_view;
+
+    // Number of nodes and edges
+    unsigned _num_nodes;
+    unsigned _num_edges;
 
 };
 

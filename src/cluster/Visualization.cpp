@@ -27,7 +27,7 @@ Visualization::Visualization()
   _cluster_size(0),
 
   _article_index(1),
-  _wikidb("/media/HDD/wikipedia-db/pages"),
+  _wikidb("/dev/shm/wiki-vis-data/pages"),
 
   _max_x(0.0),
   _max_y(0.0)
@@ -228,7 +228,7 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
     double similarity = sim;
     similarity = similarity / 1000;
 
-    if (similarity > 0.8)
+    if (similarity > 0.85)
     {
       if (!article_map_contains_id(index))
       {
@@ -254,9 +254,8 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
           }
         }
 
-        std::cout << merge_cluster->get_node_num() << std::endl;
-
-        current_cluster->merge_clusters(merge_cluster);
+        if (merge_cluster->get_node_num() > 0)
+          current_cluster->merge_clusters(merge_cluster);
       }
 
 
@@ -264,7 +263,7 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
                                                   _index2articleNode[index],
                                                   similarity);
 
-      new_edge->_color[0] = 0.0f;
+      new_edge->_color[0] = similarity;
       new_edge->_color[1] = 0.0f;
       new_edge->_color[2] = similarity;
 
@@ -327,10 +326,18 @@ Visualization::get_next_cluster()
       _index2articleNode[article.index]->_visited = true;
       visit_article(article, current_cluster);
 
-      _clusters.push_back(current_cluster);
-      _article_index++;
+      if (current_cluster->get_node_num() > 1)
+      {
+        _clusters.push_back(current_cluster);
+        _article_index++;
 
-      std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
+        std::cout << "found cluster with " << current_cluster->get_node_num() << " nodes." << std::endl;
+      }
+      else
+      {
+        _article_index++;
+        get_next_cluster();
+      }
     }
   }
 }
@@ -390,7 +397,7 @@ Visualization::add_edges_for_sim(double min_sim, double max_sim)
           {
             ArticleEdge* new_edge = create_article_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
 
-            new_edge->_color[0] = 0.0f;
+            new_edge->_color[0] = similarity;
             new_edge->_color[1] = 0.0f;
             new_edge->_color[2] = similarity;
 
