@@ -1,7 +1,7 @@
 ## Visual Text Analysis
 
 ### Installation
-install external these external dependencies into ext/ folder
+create folder ext and install these dependecies
 
 * gloost
 * imgui
