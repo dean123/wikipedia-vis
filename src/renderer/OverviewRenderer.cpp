@@ -55,9 +55,7 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _modelMatrixStack(),
 
   _translateVector(0.0, 0.0, 0.0),
-  _oldTranslateVector(0.0, 0.0, 0.0),
-  _scaleVector(1.0, 1.0, 1.0),
-  _oldScaleVector(1.0, 1.0, 1.0),
+  _scaleVector(0.001, 0.001, 1.0),
 
   _mouse_pos(0.0, 0.0, 0.0),
 
@@ -344,35 +342,22 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
     }
     else
     {
-      gloost::Vector3 translate = gloost::Vector3(_scaleVector[0] * _translateVector[0],
-                                                  _scaleVector[1] * _translateVector[1],
-                                                  0.0);
+      // Translate vector to x = 0 and y = 0
+      auto translate_to_screen_middle = gloost::Vector3((float)_width/2, (float)_height/2, 0.0);
 
+      // Translate vector according to mouse dragging
+      auto translate = gloost::Vector3(_scaleVector[0] * _translateVector[0],
+                                       _scaleVector[1] * _translateVector[1],
+                                       0.0);
 
-      _modelMatrixStack.translate((float)_width/2, (float)_height/2, 0.0);
-
+      // Translate to 0,0
       _modelMatrixStack.translate(translate);
 
+      // Panning
+      _modelMatrixStack.translate(translate_to_screen_middle);
+
+      // Zooming
       _modelMatrixStack.scale(_scaleVector);
-
-
-//      Cluster* clus = _graph->get_cluster_by_index(0);
-
-
-//      auto clus_position = gloost::Point3(clus->get_position_x(), clus->get_position_y(), 0.0);
-//
-//      std::cout << "original: " << clus_position << std::endl;
-//
-//
-//      clus_position = _modelMatrixStack.top() * clus_position;
-//
-//      std::cout << "screen space: " << clus_position << std::endl;
-//
-//
-//      clus_position = _modelMatrixStack.top().inverted() * clus_position;
-//
-//      std::cout << "inverted matrix: " << clus_position << std::endl;
-
 
 
       _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top())); // set current model view matrix
@@ -771,8 +756,6 @@ OverviewRenderer::mouseMove(int x, int y)
   {
     if (_mouseState.getButtonState(GLOOST_MOUSESTATE_BUTTON2))
     {
-      _oldTranslateVector = _translateVector;
-
       gloost::Vector3 mouse_drag = _mouseState.getSpeed();
 
       _translateVector += gloost::Vector3(mouse_drag[0] * 1/_scaleVector[0], mouse_drag[1] * 1/_scaleVector[1], 0.0);
@@ -794,8 +777,6 @@ OverviewRenderer::mouseScrollEnhance()
 {
   if (!_cluster_detail_view)
   {
-    _oldScaleVector = _scaleVector;
-
     // Zoom in
     _scaleVector[0] = _scaleVector[0] * 1.1;
     _scaleVector[1] = _scaleVector[1] * 1.1;
@@ -809,8 +790,6 @@ OverviewRenderer::mouseScrollDecrease()
 {
   if (!_cluster_detail_view)
   {
-    _oldScaleVector = _scaleVector;
-
     // Zoom out
     _scaleVector[0] = _scaleVector[0] * 0.8;
     _scaleVector[1] = _scaleVector[1] * 0.8;
@@ -927,6 +906,38 @@ OverviewRenderer::keyPress(int key, int mods)
         _cluster_detail_view = false;
         _graph->get_category_tree()->clear();
       }
+
+      break;
+    }
+
+    case 321: // NUM 1
+    {
+      std::cout << "Change global layout to ordered squares" << std::endl;
+
+      _graph->set_cluster_positions();
+
+      // re-layout all clusters
+      for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
+        _graph->get_cluster_by_index(i)->make_radial_layout();
+
+      // Fill vbos with new positions
+      fill_vbos();
+
+      break;
+    }
+
+    case 322: // NUM 2
+    {
+      std::cout << "Change global layout to radial" << std::endl;
+
+      _graph->make_global_radial_layout();
+
+      // re-layout all clusters
+      for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
+        _graph->get_cluster_by_index(i)->make_radial_layout();
+
+      // Fill vbos with new positions
+      fill_vbos();
 
       break;
     }

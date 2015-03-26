@@ -113,9 +113,7 @@ class OverviewRenderer
 
     // Panning and Zooming
     gloost::Vector3 _translateVector;
-    gloost::Vector3 _oldTranslateVector;
     gloost::Vector3 _scaleVector;
-    gloost::Vector3 _oldScaleVector;
 
     // Mouse Position for scaling
     gloost::Point3 _mouse_pos;

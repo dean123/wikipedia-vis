@@ -502,7 +502,7 @@ Visualization::make_global_radial_layout()
   double position_x = 0.0;
   double position_y = 0.0;
 
-  double global_width_height = radius * 2.0 *  sqrt(_clusters.size());
+  double global_width_height = _cluster_size *  sqrt(_clusters.size());
   double global_radius = _clusters.size() + global_width_height;
   double global_angle = (M_PI * 2.0)/_clusters.size();
 
