@@ -67,9 +67,6 @@ class OverviewRenderer
     // resize window
     void resize(int width, int height);
 
-    // Get Cluster index from mouse position
-    unsigned get_cluster_index_from_mouse_pos(gloost::Vector3);
-
     // Hightlight nodes and all corresponding edges
     void highlight_node(ArticleNode* current_node);
 

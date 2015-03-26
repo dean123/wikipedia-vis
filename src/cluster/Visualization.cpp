@@ -239,6 +239,7 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
       else
       {
         Cluster* merge_cluster = new Cluster();
+        unsigned merge_cluster_index = 0;
 
         for (unsigned i = 0; i != _clusters.size(); ++i)
         {
@@ -249,13 +250,17 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
             if (cluster_nodes[j]->_index == index)
             {
               merge_cluster = _clusters[i];
+              merge_cluster_index = i;
               break;
             }
           }
         }
 
         if (merge_cluster->get_node_num() > 0)
+        {
           current_cluster->merge_clusters(merge_cluster);
+          _clusters.erase (_clusters.begin()+merge_cluster_index);
+        }
       }
 
 
@@ -280,18 +285,6 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
       break;
     }
   }
-
-//      if (!_index2articleNode[index]->_visited)
-//      {
-//        article_queue.push_back(comparison_article);
-//      }
-//  for (unsigned i = 0; i != article_queue.size(); ++i)
-//  {
-//    Article comparison_article = article_queue[i];
-//
-//    _index2articleNode[comparison_article.index]->_visited = true;
-//    visit_article(comparison_article, current_cluster);
-//  }
 }
 
 
@@ -479,6 +472,50 @@ Visualization::set_cluster_positions()
 
   _max_x += radius;
   _max_y += radius;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+  \brief   Set cluster positions for a global radial layout
+  \remarks
+*/
+
+void
+Visualization::make_global_radial_layout()
+{
+  std::cout << _clusters.size() << std::endl;
+
+  std::sort (_clusters.begin(), _clusters.end(), cluster_compare_func);
+
+  double node_size = 100.0;
+
+  // All cluster have the size and radius of the biggest cluster
+  double width_height = node_size * sqrt(_clusters[0]->get_node_num());
+  double radius = node_size * _clusters[0]->get_node_num() + width_height;
+
+  // Set Cluster size
+  _cluster_size = (radius * 2) + radius/2;
+
+  // Das erste Cluster soll von 0 bis "_cluster_size" reichen
+  double position_x = 0.0;
+  double position_y = 0.0;
+
+  double global_width_height = radius * 2.0 *  sqrt(_clusters.size());
+  double global_radius = _clusters.size() + global_width_height;
+  double global_angle = (M_PI * 2.0)/_clusters.size();
+
+  for (unsigned i_cluster = 0; i_cluster != _clusters.size(); ++i_cluster)
+  {
+    Cluster* current_cluster = _clusters[i_cluster];
+
+    // Set position and radius
+    current_cluster->set_radius(radius);
+    current_cluster->set_position((cos(global_angle * i_cluster) * global_radius) + position_x,
+                                  (sin(global_angle * i_cluster) * global_radius) + position_y);
+
+  }
 }
 
 

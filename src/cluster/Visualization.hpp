@@ -89,6 +89,8 @@ namespace vta
 
       // Set all cluster position
       void set_cluster_positions();
+      // Set cluster positions for a global radial layout
+      void make_global_radial_layout();
 
       // Return the category tree
       CategoryTree* get_category_tree() const;

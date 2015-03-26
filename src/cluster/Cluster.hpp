@@ -4,6 +4,10 @@
 // vta
 #include <cluster/Visualization.hpp>
 
+// gloost
+#include <gloost/Matrix.h>
+#include <gloost/Mesh.h>
+
 namespace vta
 {
 
@@ -52,6 +56,9 @@ namespace vta
       // Create a default cluster
       void create_default_cluster();
 
+      // Check if point is within bounding box
+      bool within(const gloost::Point3&);
+
     private:
       // Nodes and edges of cluster
       std::vector<ArticleNode*> _nodes;
@@ -62,6 +69,9 @@ namespace vta
       double _position_y;
       // Radius
       double _radius;
+
+      // Bounding box
+      gloost::BoundingBox _bounding_box;
 
       // Radial layout weight functions
       double get_max_edge_weight(ArticleNode*);

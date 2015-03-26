@@ -344,26 +344,38 @@ OverviewRenderer::draw_nodes_and_edges(gloost::vec4 nodes_color, gloost::vec4 ed
     }
     else
     {
-      auto mouseMatrixStack = gloost::MatrixStack();
-      mouseMatrixStack.clear();
-      mouseMatrixStack.push();
-
-      mouseMatrixStack.scale(_scaleVector);
-
-      gloost::Vector3 translate = mouseMatrixStack.top() * _translateVector;
+      gloost::Vector3 translate = gloost::Vector3(_scaleVector[0] * _translateVector[0],
+                                                  _scaleVector[1] * _translateVector[1],
+                                                  0.0);
 
 
       _modelMatrixStack.translate((float)_width/2, (float)_height/2, 0.0);
 
-
       _modelMatrixStack.translate(translate);
-
 
       _modelMatrixStack.scale(_scaleVector);
 
 
+//      Cluster* clus = _graph->get_cluster_by_index(0);
+
+
+//      auto clus_position = gloost::Point3(clus->get_position_x(), clus->get_position_y(), 0.0);
+//
+//      std::cout << "original: " << clus_position << std::endl;
+//
+//
+//      clus_position = _modelMatrixStack.top() * clus_position;
+//
+//      std::cout << "screen space: " << clus_position << std::endl;
+//
+//
+//      clus_position = _modelMatrixStack.top().inverted() * clus_position;
+//
+//      std::cout << "inverted matrix: " << clus_position << std::endl;
+
+
+
       _uniformSet.set_mat4("Model", gloost::mat4(_modelMatrixStack.top())); // set current model view matrix
-      mouseMatrixStack.pop();
     }
 
     _edgeShader->use();
@@ -561,42 +573,6 @@ OverviewRenderer::resize(int width, int height)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-  \brief   Returns the index of the cluster at the current mouse position
-  \remarks ...
-*/
-
-unsigned
-OverviewRenderer::get_cluster_index_from_mouse_pos(gloost::Vector3 mouse_position)
-{
-  unsigned idx = _graph->get_cluster_num()+1;
-
-  if (mouse_position[0] > 0.0 && mouse_position[1] > 0.0)
-  {
-    _modelMatrixStack.clear();
-    _modelMatrixStack.push();
-    {
-      _modelMatrixStack.scale(_scaleVector);
-
-       mouse_position = mouse_position - _translateVector;
-       mouse_position = _modelMatrixStack.top().inverted() * mouse_position;
-    }
-
-    _modelMatrixStack.pop();
-
-    double cluster_size = _graph->get_cluster_size();
-    unsigned clusters_per_row = _graph->get_clusters_per_row_num();
-
-    idx = floor( mouse_position[0] / cluster_size ) +
-         (floor( mouse_position[1] / cluster_size ) * clusters_per_row);
-  }
-
-  return idx;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 void
 OverviewRenderer::highlight_node(ArticleNode* current_node)
@@ -712,59 +688,44 @@ OverviewRenderer::mousePress(int x, int y, int btn, int mods)
 
     else /// Click on clusters
     {
-      Cluster* test_cluster = _graph->get_cluster_by_index(0);
+      gloost::Point3 current_mouse_pos = _mouseState.getPosition();
 
-      double cluster_x = test_cluster->get_position_x();
-      double cluster_y = test_cluster->get_position_y();
+      gloost::Vector3 translate = gloost::Vector3(_scaleVector[0] * _translateVector[0],
+                                                  _scaleVector[1] * _translateVector[1],
+                                                  0.0);
 
-      double radius = test_cluster->get_radius();
+      auto translate_to_middle = gloost::Vector3((float)_width/2, (float)_height/2, 0.0);
 
-      auto pMin = gloost::Point3(cluster_x - radius, cluster_y - radius, 0.0);
-      auto pMax = gloost::Point3(cluster_x + radius, cluster_y + radius, 0.0);
+      auto matrixStack = gloost::MatrixStack();
+      matrixStack.push();
+      {
+        // Inverted translate
+        current_mouse_pos = current_mouse_pos - translate_to_middle;
 
-      gloost::BoundingBox test_box;
-      test_box.setPMin(pMin);
-      test_box.setPMax(pMin);
-
-
-      auto mouseMatrixStack = gloost::MatrixStack();
-      mouseMatrixStack.clear();
-      mouseMatrixStack.push();
-
-      mouseMatrixStack.scale(_scaleVector);
-
-      gloost::Vector3 translate = mouseMatrixStack.top() * _translateVector;
-
-      _modelMatrixStack.scale(_scaleVector);
-
-      _modelMatrixStack.translate(translate);
-
-      _modelMatrixStack.translate((float)_width/2, (float)_height/2, 0.0);
+        current_mouse_pos = current_mouse_pos - translate;
 
 
-
-      mouse_position = _modelMatrixStack.top().inverted() * mouse_position;
-
-
-      mouseMatrixStack.pop();
-      _modelMatrixStack.pop();
-
-
-      std::cout << mouse_position << std::endl;
-
-      std::cout << cluster_x << "   " << cluster_y << std::endl;
+        // Inverted scale
+        matrixStack.scale(_scaleVector);
+        current_mouse_pos = matrixStack.top().inverted() * current_mouse_pos;
+      }
+      matrixStack.pop();
 
 
-//      unsigned cluster_idx = get_cluster_index_from_mouse_pos(mouse_position);
-//      if (cluster_idx < _graph->get_cluster_num()) // mouse pos is inside graph bounding
-//      {
-//        _graph->_detail_view_cluster_index = cluster_idx;
-//
-//        _cluster_detail_view = true;
-//
-//        // Set Category tree
-//        _graph->build_category_tree(_graph->get_cluster_by_index(cluster_idx));
-//      }
+      for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
+      {
+        Cluster* current_cluster = _graph->get_cluster_by_index(i);
+
+        if (current_cluster->within(current_mouse_pos))
+        {
+          _graph->_detail_view_cluster_index = i;
+
+          _cluster_detail_view = true;
+
+          // Set Category tree
+          _graph->build_category_tree(_graph->get_cluster_by_index(i));
+        }
+      }
     }
   }
 }
@@ -1075,7 +1036,8 @@ OverviewRenderer::get_next_cluster(unsigned number_of_cluster)
     _graph->get_next_cluster();
 
   // Sort and set new cluster positions
-  _graph->set_cluster_positions();
+//  _graph->set_cluster_positions();
+  _graph->make_global_radial_layout();
 
   // re-layout all clusters
   for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
@@ -1089,4 +1051,3 @@ OverviewRenderer::get_next_cluster(unsigned number_of_cluster)
 ////////////////////////////////////////////////////////////////////////////////
 
 } // namespace vta
-

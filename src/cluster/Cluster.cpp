@@ -5,7 +5,7 @@ namespace vta
 
 
 Cluster::Cluster()
-: _nodes(),_edges(),_position_x(0.0),_position_y(0.0),_radius(0.0)
+: _nodes(),_edges(),_position_x(0.0),_position_y(0.0),_radius(0.0),_bounding_box()
 {}
 
 Cluster::~Cluster()
@@ -149,6 +149,9 @@ Cluster::make_radial_layout()
     current_node->_x = (cos(angle * i_node) * _radius) + _position_x;
     current_node->_y = (sin(angle * i_node) * _radius) + _position_y;
   }
+
+  _bounding_box.setPMin(gloost::Point3(_position_x - _radius, _position_y - _radius, 0.0));
+  _bounding_box.setPMax(gloost::Point3(_position_x + _radius, _position_y + _radius, 0.0));
 }
 
 
@@ -290,6 +293,12 @@ Cluster::create_default_cluster()
 //  }
 }
 
+
+bool
+Cluster::within(const gloost::Point3& point)
+{
+  _bounding_box.within(point);
+}
 
 
 
