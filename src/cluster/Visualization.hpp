@@ -70,14 +70,12 @@ namespace vta
       // Load edges for new similarity values
       void add_edges_for_sim(double, double);
 
-      // Get Visualization boundaries
-      double get_max_x() const;
-      double get_max_y() const;
-
       // Create Visualization from data base
-      void create_graph_from_db(const char input_file_name[], const char offset_file_name[]); // replace durch get cluster
       void visit_article(Article, Cluster*);
       void get_next_cluster();
+
+      // Set cluster index for nodes
+      void set_node_cluster_index();
 
       // Get cluster size
       double get_cluster_size() const; // Allgemeine Cluster size
@@ -100,6 +98,12 @@ namespace vta
       void set_highlighted_categories(ArticleNode*);
       void reset_highlighted_categories();
 
+      // Create new cluster with all edges and nodes of the current visualization
+      void re_cluster_current_vis();
+
+      // Delete cluster from vector
+      void clear_cluster(unsigned);
+
     private:
 
       std::map<uint32_t,ArticleNode*> _index2articleNode;
@@ -118,10 +122,6 @@ namespace vta
       // wikidb
       uint32_t _article_index;
       WikiDB _wikidb;
-
-      // boundaries of the whole visualization
-      double _max_x;
-      double _max_y;
 
       // to check if nodes allready exist
       bool article_map_contains_id(int);

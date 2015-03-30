@@ -59,6 +59,10 @@ namespace vta
       // Check if point is within bounding box
       bool within(const gloost::Point3&);
 
+      // Highlight nodes and edges / Reset highlighting
+      void highlight();
+      void reset_highlighting();
+
     private:
       // Nodes and edges of cluster
       std::vector<ArticleNode*> _nodes;

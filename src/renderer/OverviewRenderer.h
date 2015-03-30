@@ -144,7 +144,11 @@ class OverviewRenderer
     std::shared_ptr<gloost::FreeTypeWriter> _typeWriter;
 
     // Toggle if nodes should be highlighted at mouse over
-    bool _highlight_mode;
+    bool _highlight_nodes_mode;
+    bool _highlight_clusters_mode;
+
+    // Vector to store the indices of highlighted clusters
+    Cluster* _highlighted_cluster;
 
     // Vector with all cluster vbos
     std::vector < std::shared_ptr<gloost::gl::Vbo4> > _cluster_node_vbo;

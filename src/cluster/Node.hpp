@@ -18,6 +18,7 @@ namespace vta
   class Edge;
   class ArticleEdge;
   class CategoryEdge;
+  class Cluster;
 
 
   struct Node
@@ -51,16 +52,22 @@ namespace vta
   {
     // Class constructor
     ArticleNode(Article article)
-    : Node(article.index, article.title), _article(article), _outgoingEdges(), _incomingEdges()
-    {}
+    : Node(article.index, article.title), _article(article), _outgoingEdges(), _incomingEdges(), _related_cluster()
+    {
+      _related_cluster = nullptr;
+    }
 
     unsigned getDegree() const;
 
     // wikidb article
     Article _article;
+
     // Outgoing and incoming edges
     std::vector<ArticleEdge*> _outgoingEdges;
     std::vector<ArticleEdge*> _incomingEdges;
+
+    // Pointer to the cluster the node belongs to
+    Cluster* _related_cluster;
   };
 
 
@@ -74,6 +81,7 @@ namespace vta
 
     // wikidb category
     Category _category;
+
     // Outgoing and incoming edges
     std::vector<CategoryEdge*> _outgoingEdges;
     std::vector<CategoryEdge*> _incomingEdges;

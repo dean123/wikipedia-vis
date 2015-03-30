@@ -76,7 +76,10 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _vboNodes(nullptr),
   _vboEdges(nullptr),
 
-  _highlight_mode(false),
+  _highlight_nodes_mode(false),
+  _highlight_clusters_mode(true),
+  _highlighted_cluster(),
+
   _cluster_node_vbo(),
   _cluster_edge_vbo(),
 
@@ -86,6 +89,7 @@ OverviewRenderer::OverviewRenderer(Visualization* graph):
   _num_nodes(0),
   _num_edges(0)
 {
+  _highlighted_cluster = new Cluster();
 
   // create TypeWriter
   _typeWriter = gloost::FreeTypeWriter::create("../../res/fonts/Verdana.ttf", 12.0f, true);
@@ -655,16 +659,16 @@ OverviewRenderer::mousePress(int x, int y, int btn, int mods)
               highlight_node(current_node);
 
               clicked_on_node = true;
-              _highlight_mode = true;
+              _highlight_nodes_mode = true;
             }
       }
 
-      if (!clicked_on_node && _highlight_mode)
+      if (!clicked_on_node && _highlight_nodes_mode)
       {
         // Fill vbos with new positions
         fill_vbos();
 
-        _highlight_mode = false;
+        _highlight_nodes_mode = false;
         _graph->reset_highlighted_categories();
       }
 
@@ -703,12 +707,24 @@ OverviewRenderer::mousePress(int x, int y, int btn, int mods)
 
         if (current_cluster->within(current_mouse_pos))
         {
-          _graph->_detail_view_cluster_index = i;
+          if (_highlight_clusters_mode) /// highlight selected cluster
+          {
+            _highlighted_cluster->reset_highlighting();
 
-          _cluster_detail_view = true;
+            _highlighted_cluster = current_cluster;
+            _highlighted_cluster->highlight();
 
-          // Set Category tree
-          _graph->build_category_tree(_graph->get_cluster_by_index(i));
+            fill_vbos();
+          }
+          else /// change to detail view
+          {
+            _graph->_detail_view_cluster_index = i;
+
+            _cluster_detail_view = true;
+
+            // Set Category tree
+            _graph->build_category_tree(_graph->get_cluster_by_index(i));
+          }
         }
       }
     }
@@ -878,6 +894,68 @@ OverviewRenderer::keyPress(int key, int mods)
 
     case 72: // H
     {
+      _highlight_clusters_mode = !_highlight_clusters_mode;
+
+      std::cout << "toggled highlight clusters mode to: " << _highlight_clusters_mode << std::endl;
+
+      break;
+    }
+
+    case 32: // SPACE
+    {
+      if (_highlighted_cluster == nullptr)
+      {
+        std::cout << "No clusters highlighted" << std::endl;
+      }
+      else
+      {
+        std::cout << "Cluster vector size before: " << _graph->get_cluster_num() << std::endl;
+
+        // Get all nodes of the highlighted cluster
+        std::vector<ArticleNode*> cluster_nodes = _highlighted_cluster->get_nodes();
+
+        for (unsigned i = 0; i != cluster_nodes.size(); ++i)
+        {
+          ArticleNode* current_node = cluster_nodes[i];
+
+          std::vector<ArticleEdge*> out_edges = current_node->_outgoingEdges;
+          for (unsigned j = 0; j != out_edges.size(); ++j)
+          {
+            ArticleEdge* out_edge = out_edges[j];
+            ArticleNode* target = out_edge->getTarget();
+
+            if (target->_related_cluster != _highlighted_cluster)
+            {
+              std::cout << "Merge these clusters (target)" << std::endl;
+
+              _highlighted_cluster->merge_clusters(target->_related_cluster);
+
+              _highlighted_cluster->make_radial_layout();
+              fill_vbos();
+            }
+          }
+
+          std::vector<ArticleEdge*> in_edges = current_node->_incomingEdges;
+          for (unsigned j = 0; j != in_edges.size(); ++j)
+          {
+            ArticleEdge* out_edge = in_edges[j];
+            ArticleNode* source = out_edge->getSource();
+
+            if (source->_related_cluster != _highlighted_cluster)
+            {
+              _highlighted_cluster->merge_clusters(source->_related_cluster);
+
+              _highlighted_cluster->make_radial_layout();
+              fill_vbos();
+
+              std::cout << "Merge these clusters (source)" << std::endl;
+            }
+          }
+        }
+
+        std::cout << "Cluster vector size after: " << _graph->get_cluster_num() << std::endl;
+      }
+
       break;
     }
 
@@ -901,7 +979,7 @@ OverviewRenderer::keyPress(int key, int mods)
 
     case 256: // ESC
     {
-      if (!_highlight_mode)
+      if (!_highlight_nodes_mode)
       {
         _cluster_detail_view = false;
         _graph->get_category_tree()->clear();
@@ -1053,6 +1131,8 @@ OverviewRenderer::get_next_cluster(unsigned number_of_cluster)
   // re-layout all clusters
   for (unsigned i = 0; i != _graph->get_cluster_num(); ++i)
     _graph->get_cluster_by_index(i)->make_radial_layout();
+
+//  _graph->set_node_cluster_index();
 
   // Fill vbos with new positions
   fill_vbos();

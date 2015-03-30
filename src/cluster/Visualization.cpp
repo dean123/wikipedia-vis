@@ -27,10 +27,7 @@ Visualization::Visualization()
   _cluster_size(0),
 
   _article_index(1),
-  _wikidb("/dev/shm/wiki-vis-data/pages"),
-
-  _max_x(0.0),
-  _max_y(0.0)
+  _wikidb("/dev/shm/wiki-vis-data/pages")
 {
   _category_tree = new CategoryTree();
 }
@@ -149,27 +146,6 @@ Visualization::get_cluster_by_index(unsigned index)
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-  \brief   Get Visualization boundaries
-  \remarks ...
-*/
-
-double
-Visualization::get_max_x() const
-{
-  return _max_x;
-}
-
-
-double
-Visualization::get_max_y() const
-{
-  return _max_y;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
   \brief   Check if id-node map contains id
   \remarks id that replaced rev-id
 */
@@ -268,7 +244,7 @@ Visualization::visit_article(Article article, Cluster* current_cluster)
                                                   _index2articleNode[index],
                                                   similarity);
 
-      new_edge->_color[0] = similarity;
+      new_edge->_color[0] = 0.0f;
       new_edge->_color[1] = 0.0f;
       new_edge->_color[2] = similarity;
 
@@ -338,6 +314,27 @@ Visualization::get_next_cluster()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void
+Visualization::set_node_cluster_index()
+{
+  for (unsigned i = 0; i != _clusters.size(); ++i)
+  {
+    std::vector<ArticleNode*> cluster_nodes = _clusters[i]->get_nodes();
+
+    for (unsigned j = 0; j != cluster_nodes.size(); ++j)
+    {
+      ArticleNode* current_node = cluster_nodes[0];
+
+      Cluster* current_cluster = current_node->_related_cluster;
+
+      std::cout << current_cluster->get_nodes().size() << std::endl;
+    }
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 /**
   \brief   Returns the size of every cluster
   \remarks All clusters currently have the same size
@@ -390,7 +387,7 @@ Visualization::add_edges_for_sim(double min_sim, double max_sim)
           {
             ArticleEdge* new_edge = create_article_edge(_index2articleNode[article.index], _index2articleNode[index], similarity);
 
-            new_edge->_color[0] = similarity;
+            new_edge->_color[0] = 0.0f;
             new_edge->_color[1] = 0.0f;
             new_edge->_color[2] = similarity;
 
@@ -459,19 +456,12 @@ Visualization::set_cluster_positions()
     // Set position for the next cluster
     position_x += (radius * 2) + radius/2;
 
-    _max_x = std::max(_max_x, position_x);
-
     if (i_cluster % _clusters_per_row == _clusters_per_row-1) // _cluster_per_row inital 20
     {
       position_x = radius;
       position_y += (radius * 2) + radius/2;
-
-      _max_y = std::max(_max_y, position_y);
     }
   }
-
-  _max_x += radius;
-  _max_y += radius;
 }
 
 
@@ -668,6 +658,13 @@ Visualization::reset_highlighted_categories()
 {
   _category_tree->_highlight_mode = false;
   _category_tree->clear_highlighting();
+}
+
+
+void
+Visualization::clear_cluster(unsigned index)
+{
+  _clusters.erase (_clusters.begin()+index);
 }
 
 

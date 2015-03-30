@@ -18,6 +18,7 @@ Cluster::~Cluster()
 void
 Cluster::add_node(ArticleNode* node)
 {
+  node->_related_cluster = this;
   _nodes.push_back(node);
 }
 
@@ -33,7 +34,7 @@ Cluster::merge_clusters(Cluster* cluster)
 {
   std::vector<ArticleNode*> cluster_nodes = cluster->get_nodes();
   for (unsigned j = 0; j != cluster_nodes.size(); ++j)
-    _nodes.push_back(cluster_nodes[j]);
+    add_node(cluster_nodes[j]);
 
 
   std::vector<ArticleEdge*> cluster_edges = cluster->get_edges();
@@ -298,6 +299,64 @@ bool
 Cluster::within(const gloost::Point3& point)
 {
   _bounding_box.within(point);
+}
+
+
+void
+Cluster::highlight()
+{
+  for (unsigned i = 0; i != _nodes.size(); ++i)
+  {
+    std::vector<ArticleEdge*> out_edges = _nodes[i]->_outgoingEdges;
+    std::vector<ArticleEdge*> in_edges  = _nodes[i]->_incomingEdges;
+
+    _nodes[i]->_color[0] = 0.0;
+    _nodes[i]->_color[1] = 1.0;
+    _nodes[i]->_color[2] = 0.0;
+
+    for (unsigned j = 0; j != out_edges.size(); ++j)
+    {
+      out_edges[j]->_color[0] = 0.0;
+      out_edges[j]->_color[1] = 1.0;
+      out_edges[j]->_color[2] = 0.0;
+    }
+
+    for (unsigned j = 0; j != in_edges.size(); ++j)
+    {
+      in_edges[j]->_color[0] = 0.0;
+      in_edges[j]->_color[1] = 1.0;
+      in_edges[j]->_color[2] = 0.0;
+    }
+  }
+}
+
+
+void
+Cluster::reset_highlighting()
+{
+  for (unsigned i = 0; i != _nodes.size(); ++i)
+  {
+    std::vector<ArticleEdge*> out_edges = _nodes[i]->_outgoingEdges;
+    std::vector<ArticleEdge*> in_edges  = _nodes[i]->_incomingEdges;
+
+    _nodes[i]->_color[0] = 1.0;
+    _nodes[i]->_color[1] = 0.0;
+    _nodes[i]->_color[2] = 0.0;
+
+    for (unsigned j = 0; j != out_edges.size(); ++j)
+    {
+      out_edges[j]->_color[0] = 0.0;
+      out_edges[j]->_color[1] = 0.0;
+      out_edges[j]->_color[2] = out_edges[j]->getWeight();
+    }
+
+    for (unsigned j = 0; j != in_edges.size(); ++j)
+    {
+      in_edges[j]->_color[0] = 0.0;
+      in_edges[j]->_color[1] = 0.0;
+      in_edges[j]->_color[2] = in_edges[j]->getWeight();
+    }
+  }
 }
 
 

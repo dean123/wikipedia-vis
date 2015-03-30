@@ -19,9 +19,13 @@ Node::Node(uint32_t index, std::string label)
 
    _color()
  {
-   _color[0] = ((double) rand() / (RAND_MAX));
-   _color[1] = ((double) rand() / (RAND_MAX));
-   _color[2] = ((double) rand() / (RAND_MAX));
+//   _color[0] = ((double) rand() / (RAND_MAX));
+//   _color[1] = ((double) rand() / (RAND_MAX));
+//   _color[2] = ((double) rand() / (RAND_MAX));
+
+   _color[0] = 1.0f;
+   _color[1] = 0.0f;
+   _color[2] = 0.0f;
  }
 
 
